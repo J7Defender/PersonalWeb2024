@@ -131,3 +131,4 @@ dist
 
 # Template files
 templates/
+config/config.js
