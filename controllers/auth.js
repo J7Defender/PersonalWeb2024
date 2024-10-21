@@ -11,13 +11,16 @@ const authenticate = asyncHandler(async (req, res, next) => {
     );
 
     // Find user in database and check if password is correct
-    let user = await User.findById(decoded.email);
+    const user = await User.findOne({ email: email });
     if (user) {
+      // User exists in database
       if (await bcrypt.compare(password, user.password)) {
-        req.success = true;
+        // Password is correct
+        req.authenticateSuccess = true;
         next();
       } else {
-        req.success = false;
+        // Pasword is NOT correct
+        req.authenticateSuccess = false;
         next();
       }
     } else {

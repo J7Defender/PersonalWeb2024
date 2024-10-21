@@ -17,10 +17,10 @@ const loginUser = asyncHandler(async (req, res, next) => {
   console.log(`User ${email} and password ${password}`);
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    req.correct = true;
+    req.loginSuccess = true;
     res.cookie("access_token", generateToken(user.email, user.password), { httpOnly: true });
   } else {
-    req.correct = false;
+    req.loginSuccess = false;
   }
 
   next();
@@ -55,9 +55,9 @@ const registerUser = asyncHandler(async (req, res, next) => {
   }
 
   if (user) {
-    req.success = true;
+    req.registerSuccess = true;
   } else {
-    req.success = false;
+    req.registerSuccess = false;
   }
 
   next();
