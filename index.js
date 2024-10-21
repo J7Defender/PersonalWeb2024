@@ -1,7 +1,12 @@
 import express from "express";
 import bodyParser from "body-parser";
 import logger from "morgan";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+
 import { loginUser, registerUser } from "./controllers/user.js";
+import { authenticate } from "./controllers/auth.js";
+import { JWT_SECRET } from "./config/config.js";
 
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -14,8 +19,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = 3000;
 
+// Set environment variables
+process.env.JWT_SECRET = JWT_SECRET;
+
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("tiny"));
+// TODO: Try to use flags to enable or disable logging
 
 app.get("/", (req, res) => {
   res.render("index", {
@@ -23,21 +34,30 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/signin", (req, res) => {
+app.get("/signin", authenticate, (req, res) => {
+  if (req.authenticateSuccess) {
+    res.redirect("/");
+    console.log("[indexed.js] User already logged in");
+  }
+
   res.render("signin", {
     title: "Sign in",
   });
 });
 
 app.post("/signin", loginUser, (req, res) => {
-  if (req.userExists && req.correct) {
+  if (req.userExists && req.loginSuccess) {
     res.redirect("/");
   } else {
     res.redirect("/signin");
   }
 });
 
-app.get("/register", (req, res) => {
+app.get("/register", authenticate, (req, res) => {
+  if (req.userLoggedIn) {
+    res.redirect("/");
+  }
+
   res.render("register", {
     title: "Register",
   });
@@ -56,7 +76,7 @@ app.post("/register", registerUser, (req, res) => {
   }
 });
 
-app.get("/newrequest", (req, res) => { 
+app.get("/newrequest", (req, res) => {
   res.render("newrequest", {
     title: "New Request",
   });
