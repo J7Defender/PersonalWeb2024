@@ -48,7 +48,7 @@ app.post("/register", registerUser, (req, res) => {
     // TODO: Handle if user already exists
   }
 
-  if (req.success) {
+  if (req.registerSuccess) {
     res.redirect("/signin");
   } else {
     res.redirect("/register");
