@@ -44,10 +44,15 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", registerUser, (req, res) => {
+  if (req.userExists) {
+    // TODO: Handle if user already exists
+  }
+
   if (req.success) {
     res.redirect("/signin");
   } else {
     res.redirect("/register");
+    // TODO: Handle if user has failed to register
   }
 });
 

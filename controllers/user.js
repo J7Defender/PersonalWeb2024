@@ -21,6 +21,8 @@ const loginUser = asyncHandler(async (req, res, next) => {
     req.correct = false;
   }
 
+  // TODO: Generate user access token
+
   next();
 });
 
