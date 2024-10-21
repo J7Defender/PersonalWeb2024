@@ -129,6 +129,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Template files
+# Template files and assets
 templates/
 config/config.js
+assets/
