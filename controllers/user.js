@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import { User } from "../models/user.js";
+import { generateToken } from "./auth.js";
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -17,11 +18,10 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   if (user && (await bcrypt.compare(password, user.password))) {
     req.correct = true;
+    res.cookie("access_token", generateToken(user.email, user.password), { httpOnly: true });
   } else {
     req.correct = false;
   }
-
-  // TODO: Generate user access token
 
   next();
 });
@@ -63,4 +63,9 @@ const registerUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
-export { loginUser, registerUser };
+const logoutUser = asyncHandler(async (req, res) => {
+  res.clearCookie('access_token');
+  res.redirect('/');
+})
+
+export { loginUser, registerUser, logoutUser };
