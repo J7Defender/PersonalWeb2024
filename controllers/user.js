@@ -16,7 +16,9 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   if (user && (await bcrypt.compare(password, user.password))) {
     req.loginSuccess = true;
-    res.cookie("access_token", generateToken(user.email, user.password), { httpOnly: true });
+    res.cookie("access_token", generateToken(user.email, user.password), {
+      httpOnly: true,
+    });
     console.log("User logged in successfully");
   } else {
     req.loginSuccess = false;
@@ -65,9 +67,11 @@ const registerUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
-  res.clearCookie('access_token');
-  res.redirect('/');
-})
+const logoutUser = asyncHandler(async (req, res, next) => {
+  res.clearCookie("access_token", { httpOnly: true });
+  res.redirect("/");
+
+  next();
+});
 
 export { loginUser, registerUser, logoutUser };

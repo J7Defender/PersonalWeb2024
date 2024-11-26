@@ -4,7 +4,7 @@ import logger from "morgan";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-import { loginUser, registerUser } from "./controllers/user.js";
+import { loginUser, registerUser, logoutUser } from "./controllers/user.js";
 import { authenticate } from "./controllers/auth.js";
 import { JWT_SECRET } from "./config/config.js";
 
@@ -28,10 +28,18 @@ app.use(cookieParser());
 app.use(morgan("tiny"));
 // TODO: Try to use flags to enable or disable logging
 
-app.get("/", (req, res) => {
-  res.render("index", {
-    title: "Index",
-  });
+app.get("/", authenticate, (req, res) => {
+  if (req.authenticateSuccess) { 
+    res.render("index", {
+      title: "Index",
+      authenticated: true,
+    });
+  } else {
+    res.render("index", {
+      title: "Index",
+      authenticated: false,
+    });
+  }
 });
 
 app.get("/signin", authenticate, (req, res) => {
@@ -80,6 +88,10 @@ app.get("/newrequest", (req, res) => {
   res.render("newrequest", {
     title: "New Request",
   });
+});
+
+app.get("/logout", logoutUser, (req, res) => {
+  res.redirect("/");
 });
 
 app.listen(port, () => {

@@ -4,5 +4,21 @@
   </head>
   <body>
     <h1>Title2</h1>
+    <% if (authenticated === false) { %>
+    <h2>You are not logged in</h2>
+    <a href="/signin">Sign In</a>
+    <a href="/register">Register</a>
+    <% } else { %>
+    <form action="/note">
+      <label for="note">Here is your note:</label>
+      <input type="text" />
+      <label for="save">You will need to save before you leave the site</label>
+      <input type="submit" value="Save" />
+    </form>
+    <% } %>
+
+    <% if (authenticated === true) { %>
+      <a href="/logout">Logout</a>
+    <% } %>
   </body>
 </html>
