@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <%- include('./partials/head'); %>
   </head>
   <body>
-    <h1>Title2</h1>
+    <%- include('./partials/navBar.ejs') %>
     <% if (authenticated === false) { %>
     <h2>You are not logged in</h2>
     <a href="/signin">Sign In</a>

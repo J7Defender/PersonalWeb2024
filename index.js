@@ -19,13 +19,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = 3000;
 
+// Use public directory for css and other assets
+app.use(express.static(__dirname + '/public'));
+
 // Set environment variables
 process.env.JWT_SECRET = JWT_SECRET;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(morgan("tiny"));
+app.use(morgan("dev"));
 // TODO: Try to use flags to enable or disable logging
 
 app.get("/", authenticate, (req, res) => {

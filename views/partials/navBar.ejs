@@ -1,0 +1,15 @@
+<nav class="navbar navbar-light bg-light">
+  <a class="navbar-brand mb-0 h1" href="/index">MyWeb</a>
+  <div class="navbar-nav list-group-horizontal list">
+    <a class="navbutton nav-link" href="#">Home</a>
+    <a class="navbutton nav-link" href="#">Writing Note</a>
+    <% if (authenticated === true) { %>
+    <a class="navbutton nav-link" href="/logout">Logout</a>
+    <% } else { %>
+    <a class="navbutton nav-link" href="/signin">Sign In</a>
+    <a class="navbutton nav-link" href="/register">Register</a>
+    <% } %>
+  </div>
+</nav>
+
+<!-- TODO: Set code for active nav item -->
