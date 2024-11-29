@@ -4,8 +4,8 @@ import logger from "morgan";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-import { loginUser, registerUser, logoutUser } from "./controllers/user.js";
-import { authenticate } from "./controllers/auth.js";
+import { loginUser, registerUser, logoutUser } from "./controllers/userController.js";
+import { authenticate } from "./controllers/authController.js";
 import { JWT_SECRET } from "./config/config.js";
 
 import { dirname } from "path";
@@ -87,10 +87,8 @@ app.post("/register", registerUser, (req, res) => {
   }
 });
 
-app.get("/newrequest", (req, res) => {
-  res.render("newrequest", {
-    title: "New Request",
-  });
+app.post("/note", (req, res) => {
+
 });
 
 app.get("/logout", logoutUser, (req, res) => {

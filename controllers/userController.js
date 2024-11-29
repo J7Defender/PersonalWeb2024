@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
-import { User } from "../models/user.js";
-import { generateToken } from "./auth.js";
+import { User } from "../models/userModel.js";
+import { generateToken } from "./authController.js";
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;

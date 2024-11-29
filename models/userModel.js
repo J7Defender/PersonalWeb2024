@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { SchemaType } from "mongoose";
 
 const userSchema = mongoose.Schema({
   email: {
@@ -10,14 +10,10 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, "Please add a password"],
   },
-//   fullName: {
-//     type: String,
-//     required: [true, "Please add a name"],
-//   },
-//   lastRequestDate: {
-//     type: Date,
-//     default: null,
-//   },
+  fullName: {
+    type: String,
+  },
+  note: [{ type: mongoose.Schema.Types.ObjectId, ref: "note" }],
 });
 
 const User = mongoose.model("User", userSchema, "user");

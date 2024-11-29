@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
-import { User } from "../models/user.js";
+import { User } from "../models/userModel.js";
 
 // Check if user has logged in using correct information
 const authenticate = asyncHandler(async (req, res, next) => {
