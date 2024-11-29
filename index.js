@@ -97,6 +97,13 @@ app.get("/logout", logoutUser, (req, res) => {
   res.redirect("/");
 });
 
+// Handle 404 requests
+app.get("*", (req, res) => {
+  res.render("404", {
+    title: "Page Not Found",
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
