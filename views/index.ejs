@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <%- include('./partials/head'); %>
+    <link rel="stylesheet" href="/styles/noteStyles.css">
   </head>
   <body>
     <header>
@@ -11,16 +12,13 @@
     <h2>You are currently not logged in</h2>
     <h2>Please log in to continue</h2>
     <% } else { %>
-    <form action="/note">
-      <label for="note">Here is your note:</label>
-      <input type="text" />
-      <label for="save">You will need to save before you leave the site</label>
-      <input type="submit" value="Save" />
-    </form>
-    <% } %>
-
-    <% if (authenticated === true) { %>
-      <a href="/logout">Logout</a>
+    <div class="note-container">
+      <h2>Your Note</h2>
+      <form action="/note" method="post">
+        <textarea name="note" placeholder="Write your note here..."></textarea>
+        <button type="submit">Save</button>
+      </form>
+    </div>
     <% } %>
   </body>
 </html>
