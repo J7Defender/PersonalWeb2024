@@ -31,3 +31,9 @@
 .note-container button:hover {
   background-color: #218838;
 }
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}

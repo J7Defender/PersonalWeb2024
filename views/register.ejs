@@ -11,5 +11,11 @@
       <input type="password" name="password" id="password" />
       <input type="submit" value="Register" />
     </form>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error-message">
+        <p><%= error %></p>
+      </div>
+    <% } %>
   </body>
 </html>
