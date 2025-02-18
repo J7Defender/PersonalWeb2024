@@ -67,8 +67,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 const logoutUser = asyncHandler(async (req, res, next) => {
   res.clearCookie("access_token");
-  res.redirect("/");
-
+  
   next();
 });
 

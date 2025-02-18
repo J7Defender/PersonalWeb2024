@@ -33,12 +33,12 @@ app.use(morgan("dev"));
 
 app.get("/", authenticate, (req, res) => {
   if (req.authenticateSuccess) { 
-    res.render("index", {
+    return res.render("index", {
       title: "Index",
       authenticated: true,
     });
   } else {
-    res.render("index", {
+    return res.render("index", {
       title: "Index",
       authenticated: false,
     });
@@ -47,8 +47,8 @@ app.get("/", authenticate, (req, res) => {
 
 app.get("/signin", authenticate, (req, res) => {
   if (req.authenticateSuccess) {
-    res.redirect("/");
     console.log("[indexed.js] User already logged in");
+    return res.redirect("/");
   }
 
   res.render("signin", {
@@ -58,18 +58,20 @@ app.get("/signin", authenticate, (req, res) => {
 
 app.post("/signin", loginUser, (req, res) => {
   if (req.userExists && req.loginSuccess) {
-    res.redirect("/");
+    return res.redirect("/");
   } else {
-    res.redirect("/signin");
+    return res.render("signin", {
+      title: "Sign in",
+    });
   }
 });
 
 app.get("/register", authenticate, (req, res) => {
   if (req.userLoggedIn) {
-    res.redirect("/");
+    return res.redirect("/");
   }
 
-  res.render("register", {
+  return res.render("register", {
     title: "Register",
   });
 });
@@ -77,12 +79,19 @@ app.get("/register", authenticate, (req, res) => {
 app.post("/register", registerUser, (req, res) => {
   if (req.userExists) {
     // TODO: Handle if user already exists
+    return res.render("register", {
+      title: "Register",
+      error: "User already exists",
+    });
   }
 
   if (req.registerSuccess) {
-    res.redirect("/signin");
+    return res.redirect("/signin");
   } else {
-    res.redirect("/register");
+    return res.render("register", {
+      title: "Register",
+      error: "Registration failed",
+    });
     // TODO: Handle if user has failed to register
   }
 });
@@ -92,12 +101,12 @@ app.post("/note", (req, res) => {
 });
 
 app.get("/logout", logoutUser, (req, res) => {
-  res.redirect("/");
+  return res.redirect("/");
 });
 
 // Handle 404 requests
 app.get("*", (req, res) => {
-  res.render("404", {
+  return res.render("404", {
     title: "Page Not Found",
   });
 });

@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
 
 // Check if user has logged in using correct information
@@ -15,31 +14,34 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
       // Find user in database and check if password is correct
       const user = await User.findOne({ email: decoded.email });
-      if (user) {
-        // User exists in database
-        console.log("[authenticate] We found user in database");
-        if (decoded.password === user.password) {
-          // Password is correct
-          req.authenticateSuccess = true;
-          console.log("[authenticate] Password is correct");
-          next();
-        } else {
-          // Pasword is NOT correct
-          req.authenticateSuccess = false;
-          console.log("[authenticate] Password is incorrect");
-          next();
-        }
-      } else {
-        next();
+      if (!user) {
+        req.authenticateSuccess = false;
+        return next();
       }
+
+      // User exists in database
+      console.log("[authenticate] We found user in database");
+      if (decoded.password === user.password) {
+        // Password is correct
+        req.authenticateSuccess = true;
+        console.log("[authenticate] Password is correct");
+      } else {
+        // Password is NOT correct
+        req.authenticateSuccess = false;
+        console.log("[authenticate] Password is incorrect");
+      }
+      return next();
     } catch (err) {
       res.clearCookie("access_token");
       console.log("[authenticate] Error: " + err);
       console.log("[authenticate] Error: Clearing cookie");
+      req.authenticateSuccess = false;
+      return next();
     }
+  } else {
+    req.authenticateSuccess = false;
+    return next();
   }
-
-  next();
 });
 
 const generateToken = (email, password) => {
