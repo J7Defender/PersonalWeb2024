@@ -133,3 +133,4 @@ dist
 templates/
 config/config.js
 assets/
+.idea
