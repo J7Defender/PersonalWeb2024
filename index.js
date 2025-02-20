@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 
 import { loginUser, registerUser, logoutUser } from "./controllers/userController.js";
 import { authenticate } from "./controllers/authController.js";
+import { getNotesList, getNote } from "./controllers/noteController.js";
 import { JWT_SECRET } from "./config/config.js";
 
 import { dirname } from "path";
@@ -23,7 +24,9 @@ const port = 3000;
 app.use(express.static(__dirname + '/public'));
 
 // Set environment variables
+// TODO: Set these flags in .env file
 process.env.JWT_SECRET = JWT_SECRET;
+process.env.DEBUG_ENABLED = true;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -96,7 +99,46 @@ app.post("/register", registerUser, (req, res) => {
   }
 });
 
-app.post("/note", (req, res) => {
+// Handle note creation
+app.post("/note/new", authenticate, (req, res) => {
+  if (!req.authenticateSuccess) {
+    return res.redirect("/signin");
+  }
+
+  // TODO: Generate new id for a note
+  let id = 0; // Test value
+
+  return res.redirect("/note/edit/" + id);
+});
+
+// Handle note editing
+app.post("note/edit/:id", authenticate, (req, res) => {
+  if (!req.authenticateSuccess) {
+    return res.redirect("/signin");
+  }
+  
+  // TODO: Render page for editing note
+  return res.render("note", {
+    title: "Edit Note",
+    authenticated: true,
+    id: req.params.id,
+  });
+});
+
+// Get list of notes
+app.get("/list", authenticate, (req, res) => {
+  if (req.authenticateSuccess) { 
+    return res.render("list", {
+      title: "List",
+      authenticated: true,
+    });
+  } else {
+    return res.redirect("/signin");
+  }
+});
+
+// Get note by id
+app.get("/note/:id", (req, res) => {
 
 });
 

@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
-import { generateToken } from "./authController.js";
+import { generateToken, decodeToken } from "./authController.js";
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -71,4 +71,20 @@ const logoutUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
-export { loginUser, registerUser, logoutUser };
+const isLoggedIn = () => {
+  if (req.cookies.access_token) {
+    return true;
+  }
+
+  return false;
+};
+
+const getEmail = () => {
+  if (req.cookies.access_token) {
+    return decodeToken(req.cookies.access_token).email;
+  }
+
+  return null;
+}
+
+export { loginUser, registerUser, logoutUser, isLoggedIn, getEmail };
