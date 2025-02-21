@@ -53,4 +53,25 @@ const getNote = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { getNotesList, getNote };
+const createNote = asyncHandler(async (req, res, next) => {
+  let note;
+  try {
+    note = await Note.create({
+      title: "New Note",
+      content: "",
+      shorten: "",
+    });
+
+    if (note) {
+      console.log("Note created successfully");
+      return res.redirect("/note/edit/" + note._id);
+    } else {
+      console.log("Note creation failed");
+      return res.redirect("/");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+export { getNotesList, getNote, createNote };

@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 
 import {loginUser, registerUser, logoutUser} from "./controllers/userController.js";
 import {authenticate} from "./controllers/authController.js";
-import {getNotesList, getNote} from "./controllers/noteController.js";
+import {getNotesList, getNote, createNote} from "./controllers/noteController.js";
 import {JWT_SECRET} from "./config/config.js";
 
 import {dirname} from "path";
@@ -99,16 +99,7 @@ app.post("/register", registerUser, (req, res) => {
 });
 
 // Handle note creation
-app.post("/note/new", authenticate, (req, res) => {
-	if (!req.authenticateSuccess) {
-		return res.redirect("/signin");
-	}
-
-	// TODO: Generate new id for a note
-	let id = 0; // Test value
-
-	return res.redirect("/note/edit/" + id);
-});
+app.post("/note/new", authenticate, createNote);
 
 // Handle note editing
 app.post("/note/edit/:id", authenticate, (req, res) => {
