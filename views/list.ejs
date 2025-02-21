@@ -7,11 +7,29 @@
   <body>
     <header><%- include('./partials/navBar.ejs') %></header>
     <div class="">
-        <h2>Your Notes</h2>
-        <form action="/note/new" method="POST" style="display: inline;">
-          <button type="submit" class="btn btn-outline-secondary mr-2 px-2">Create Note</button>
-        </form>
+      <h2>Your Notes</h2>
+      <div class="notes-list">
+        <% if (notes && notes.length > 0) { %>
+        <ul>
+          <% notes.forEach(note => { %>
+          <li>
+            <button class="list-button">
+              <h3><%= note.title %></h3>
+              <!-- TODO: Find a way to display shorten part of the note content -->
+              <!-- <p><%= note.content %></p> -->
+            </button>
+          </li>
+          <% }) %>
+        </ul>
+        <% } else { %>
+        <p>No notes found.</p>
+        <% } %>
+      </div>
+      <form action="/note/new" method="POST" style="display: inline">
+        <button type="submit" class="btn btn-outline-secondary mr-2 px-2">
+          Create Note
+        </button>
+      </form>
     </div>
-    
   </body>
 </html>

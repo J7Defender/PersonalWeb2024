@@ -50,7 +50,7 @@ app.get("/", authenticate, (req, res) => {
 app.get("/signin", authenticate, (req, res) => {
 	if (req.authenticateSuccess) {
 		console.log("[indexed.js] User already logged in");
-    return res.redirect("/");
+		return res.redirect("/");
 	}
 
 	res.render("signin", {
@@ -111,7 +111,7 @@ app.post("/note/new", authenticate, (req, res) => {
 });
 
 // Handle note editing
-app.post("note/edit/:id", authenticate, (req, res) => {
+app.post("/note/edit/:id", authenticate, (req, res) => {
 	if (!req.authenticateSuccess) {
 		return res.redirect("/signin");
 	}
@@ -125,20 +125,19 @@ app.post("note/edit/:id", authenticate, (req, res) => {
 });
 
 // Get list of notes
-app.get("/list", authenticate, (req, res) => {
-	if (req.authenticateSuccess) {
-		return res.render("list", {
-			title: "List",
-			authenticated: true,
-		});
-	} else {
-		return res.redirect("/signin");
-	}
-});
+app.get("/list", authenticate, getNotesList);
 
 // Get note by id
-app.get("/note/:id", (req, res) => {
+app.get("/note/:id", authenticate, (req, res) => {
+	if (!req.authenticateSuccess) {
+		return res.redirect("/signin");
+	}
 
+	return res.render("note", {
+		title: "Note",
+		authenticated: true,
+		id: req.params.id,
+	});
 });
 
 app.get("/logout", logoutUser, (req, res) => {

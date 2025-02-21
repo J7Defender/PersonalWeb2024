@@ -67,24 +67,24 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 const logoutUser = asyncHandler(async (req, res, next) => {
   res.clearCookie("access_token");
-  
+
   next();
 });
 
-const isLoggedIn = () => {
-  if (req.cookies.access_token) {
+const isLoggedIn = (accessToken) => {
+  if (accessToken && accessToken !== "undefined") {
     return true;
   }
 
   return false;
 };
 
-const getEmail = () => {
-  if (req.cookies.access_token) {
-    return decodeToken(req.cookies.access_token).email;
+const getEmail = (accessToken) => {
+  if (accessToken && accessToken !== "undefined") {
+    return decodeToken(accessToken).email;
   }
 
   return null;
-}
+};
 
 export { loginUser, registerUser, logoutUser, isLoggedIn, getEmail };
