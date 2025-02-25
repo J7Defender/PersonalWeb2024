@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 
 import {loginUser, registerUser, logoutUser} from "./controllers/userController.js";
 import {authenticate} from "./controllers/authController.js";
-import {getNotesList, getNote, createNote} from "./controllers/noteController.js";
+import {getNotesList, getNote, createNote, loadNote} from "./controllers/noteController.js";
 import {JWT_SECRET} from "./config/config.js";
 
 import {dirname} from "path";
@@ -15,9 +15,16 @@ import {fileURLToPath} from "url";
 // Connect to MongoDB using Mongoose
 import("./config/database.js");
 
+// Import routes
+import userRoutes from "./routes/userRoutes.js";
+import noteRoutes from "./routes/noteRoutes.js";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = 3000;
+
+// These public paths can be accessed without being authenticated
+const publicPaths = ["/signin", "/register", "/"];
 
 // Use public directory for css and other assets
 app.use(express.static(__dirname + '/public'));
@@ -33,106 +40,28 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 // TODO: Try to use flags to enable or disable logging
 
-app.get("/", authenticate, (req, res) => {
-	if (req.authenticateSuccess) {
-		return res.render("index", {
-			title: "Index",
-			authenticated: true,
-		});
-	} else {
-		return res.render("index", {
-			title: "Index",
-			authenticated: false,
-		});
-	}
+// Return No content for favicon requests (default browser behavior) => Include later if needed
+app.get("/favicon.ico", (req, res) => {
+	return res.sendStatus(204);
 });
 
-app.get("/signin", authenticate, (req, res) => {
-	if (req.authenticateSuccess) {
-		console.log("[indexed.js] User already logged in");
-		return res.redirect("/list");
-	}
-
-	res.render("signin", {
-		title: "Sign in",
-	});
-});
-
-app.post("/signin", loginUser, (req, res) => {
-	if (req.userExists && req.loginSuccess) {
-		return res.redirect("/list");
-	} else {
-		return res.render("signin", {
-			title: "Sign in",
-		});
-	}
-});
-
-app.get("/register", authenticate, (req, res) => {
-	if (req.authenticateSuccess) {
-		return res.redirect("/");
-	}
-
-	return res.render("register", {
-		title: "Register",
-	});
-});
-
-app.post("/register", registerUser, (req, res) => {
-	if (req.userExists) {
-		// TODO: Handle if user already exists
-		return res.render("register", {
-			title: "Register",
-			error: "User already exists",
-		});
-	}
-
-	if (req.registerSuccess) {
-		return res.redirect("/signin");
-	} else {
-		return res.render("register", {
-			title: "Register",
-			error: "Registration failed",
-		});
-		// TODO: Handle if user has failed to register
-	}
-});
-
-// Handle note creation
-app.post("/note/new", authenticate, createNote);
-
-// Handle note editing
-app.post("/note/edit/:id", authenticate, (req, res) => {
-	if (!req.authenticateSuccess) {
+app.use(authenticate, (req, res, next) => {
+	if (req.method === "GET" && !req.authenticateSuccess && !publicPaths.includes(req.path)) {
 		return res.redirect("/signin");
 	}
 
-	// TODO: Render page for editing note
-	return res.render("note", {
-		title: "Edit Note",
-		authenticated: true,
-		id: req.params.id,
-	});
+	req.authenticateSuccess = req.authenticateSuccess || false;
+	return next();
 });
 
-// Get list of notes
-app.get("/list", authenticate, getNotesList);
+app.use("/", userRoutes);
+app.use("/", noteRoutes);
 
-// Get note by id
-app.get("/note/:id", authenticate, loadNote, (req, res) => {
-	if (!req.authenticateSuccess) {
-		return res.redirect("/signin");
-	}
-
-	return res.render("note", {
-		title: "Note",
-		authenticated: true,
-		id: req.params.id,
+app.get("/", (req, res) => {
+	return res.render("index", {
+		title: "Index",
+		authenticated: req.authenticateSuccess,
 	});
-});
-
-app.get("/logout", logoutUser, (req, res) => {
-	return res.redirect("/");
 });
 
 // Handle 404 requests

@@ -7,10 +7,6 @@ import { decodeToken } from "./authController.js";
 import { getEmail, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
-  if (!req.authenticateSuccess) {
-    return res.redirect("/signin");
-  }
-
   const email = getEmail(req.cookies.access_token);
   const userObj = await User.findOne({ email: email });
 
@@ -79,10 +75,6 @@ const createNote = asyncHandler(async (req, res, next) => {
 });
 
 const loadNote = asyncHandler(async (req, res, next) => {
-  if (!req.authenticateSuccess) {
-    return res.redirect("/signin");
-  }
-
   const email = getEmail(req.cookies.access_token);
   const userObj = await User.findOne({ email: email });
 });

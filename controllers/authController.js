@@ -36,6 +36,8 @@ const authenticate = asyncHandler(async (req, res, next) => {
       return next();
     }
   } else {
+    console.log("[authenticate] No access token found");
+    console.log("[authenticate] User is not authenticated");
     req.authenticateSuccess = false;
     return next();
   }
