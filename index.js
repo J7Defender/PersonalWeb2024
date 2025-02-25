@@ -50,7 +50,7 @@ app.get("/", authenticate, (req, res) => {
 app.get("/signin", authenticate, (req, res) => {
 	if (req.authenticateSuccess) {
 		console.log("[indexed.js] User already logged in");
-		return res.redirect("/");
+		return res.redirect("/list");
 	}
 
 	res.render("signin", {
@@ -60,7 +60,7 @@ app.get("/signin", authenticate, (req, res) => {
 
 app.post("/signin", loginUser, (req, res) => {
 	if (req.userExists && req.loginSuccess) {
-		return res.redirect("/");
+		return res.redirect("/list");
 	} else {
 		return res.render("signin", {
 			title: "Sign in",
@@ -119,7 +119,7 @@ app.post("/note/edit/:id", authenticate, (req, res) => {
 app.get("/list", authenticate, getNotesList);
 
 // Get note by id
-app.get("/note/:id", authenticate, (req, res) => {
+app.get("/note/:id", authenticate, loadNote, (req, res) => {
 	if (!req.authenticateSuccess) {
 		return res.redirect("/signin");
 	}

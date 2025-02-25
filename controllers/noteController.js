@@ -7,7 +7,7 @@ import { decodeToken } from "./authController.js";
 import { getEmail, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
-  if (!isLoggedIn(req.cookies.access_token)) {
+  if (!req.authenticateSuccess) {
     return res.redirect("/signin");
   }
 
@@ -70,6 +70,7 @@ const createNote = asyncHandler(async (req, res, next) => {
       return res.redirect("/note/edit/" + note._id);
     } else {
       console.log("Note creation failed");
+      req.flash("error", "Note creation failed. Please try again.");
       return res.redirect("/");
     }
   } catch (error) {
@@ -77,4 +78,13 @@ const createNote = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { getNotesList, getNote, createNote };
+const loadNote = asyncHandler(async (req, res, next) => {
+  if (!req.authenticateSuccess) {
+    return res.redirect("/signin");
+  }
+
+  const email = getEmail(req.cookies.access_token);
+  const userObj = await User.findOne({ email: email });
+});
+
+export { getNotesList, getNote, createNote, loadNote };
