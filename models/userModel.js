@@ -13,7 +13,7 @@ const userSchema = mongoose.Schema({
   fullName: {
     type: String,
   },
-  notes: [{ type: mongoose.Schema.Types.ObjectId, ref: "note" }],
+  notes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Note" }],
 });
 
 const User = mongoose.model("User", userSchema, "user");

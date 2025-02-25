@@ -48,6 +48,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
       email: email,
       password: hashedpassword
     });
+    await user.save();
   } catch (error) {
     console.log(error);
   }

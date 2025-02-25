@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 const noteSchema = mongoose.Schema({
   title: {
     type: String,
-    default: "New Note", // Default value for content
     required: true,
   },
   content: {
@@ -21,6 +20,6 @@ const noteSchema = mongoose.Schema({
 
 // TODO: Implement for storing much longer text using GridFS
 
-const Note = mongoose.model("note", noteSchema, "note");
+const Note = mongoose.model("Note", noteSchema, "note");
 
 export { Note };

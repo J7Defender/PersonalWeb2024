@@ -8,7 +8,7 @@ import { getId, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
   const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id });
+  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
 
   if (!userObj) {
     return res.status(404).json({ message: "User not found" });
@@ -53,18 +53,23 @@ const getNote = asyncHandler(async (req, res, next) => {
 const createNote = asyncHandler(async (req, res, next) => {
   let note;
   try {
-    user = getUser(req.cookies.access_token);
+    const _id = getId(req.cookies.access_token);
 
     note = await Note.create({
-      title: "New Note",
+      title: "Untitled",
       content: "",
       shorten: "",
-      owner: user._id,
+      owner: _id,
     });
+    await note.save();
+
+    const user = await User.findOne({ _id: _id });
+    user.notes.push(note);
+    await user.save();
 
     if (note) {
       console.log("Note created successfully");
-      return res.redirect("/note/edit/" + note._id);
+      return res.redirect("/note/" + note._id);
     } else {
       console.log("Note creation failed");
       req.flash("error", "Note creation failed. Please try again.");
@@ -77,9 +82,22 @@ const createNote = asyncHandler(async (req, res, next) => {
 
 const loadNote = asyncHandler(async (req, res, next) => {
   const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id });
+  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
 
-  // TODO: Load note from database
+  const noteId = req.params.id;
+  const note = userObj.notes.find((note) => note._id == noteId);
+  console.log(note.title);
+  console.log(note.content);
+  if (!note) {
+    return res.status(404).json({ message: "Note not found" });
+  }
+
+  return res.render("note", {
+    title: "Note",
+    authenticated: true,
+    title: note.title,
+    content: note.content,
+  });
 });
 
 export { getNotesList, getNote, createNote, loadNote };
