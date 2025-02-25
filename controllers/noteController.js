@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 import { User } from "../models/userModel.js";
 import { Note } from "../models/noteModel.js";
 import { decodeToken } from "./authController.js";
-import { getEmail, isLoggedIn, getUser } from "./userController.js";
+import { getId, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
-  const email = getEmail(req.cookies.access_token);
-  const userObj = await User.findOne({ email: email });
+  const _id = getId(req.cookies.access_token);
+  const userObj = await User.findOne({ _id: _id });
 
   if (!userObj) {
     return res.status(404).json({ message: "User not found" });
@@ -33,10 +33,11 @@ const getNotesList = asyncHandler(async (req, res, next) => {
 
 // Get a single note from user
 const getNote = asyncHandler(async (req, res, next) => {
-  const currentUser = await User.findOne({ email: req.email });
+  const _id = getId(req.cookies.access_token);
+  const userObj = await User.findOne({ _id: _id });
 
   try {
-    let notes = await currentUser.populate("notes").execPopulate();
+    let notes = await userObj.populate("notes").execPopulate();
     if (notes) {
       console.log(notes);
 
@@ -75,8 +76,10 @@ const createNote = asyncHandler(async (req, res, next) => {
 });
 
 const loadNote = asyncHandler(async (req, res, next) => {
-  const email = getEmail(req.cookies.access_token);
-  const userObj = await User.findOne({ email: email });
+  const _id = getId(req.cookies.access_token);
+  const userObj = await User.findOne({ _id: _id });
+
+  // TODO: Load note from database
 });
 
 export { getNotesList, getNote, createNote, loadNote };

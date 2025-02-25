@@ -16,7 +16,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   if (user && (await bcrypt.compare(password, user.password))) {
     req.loginSuccess = true;
-    res.cookie("access_token", generateToken(user.email, user.password));
+    res.cookie("access_token", generateToken(user._id, user.password));
     console.log("User logged in successfully");
   } else {
     req.loginSuccess = false;
@@ -27,7 +27,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
 });
 
 const registerUser = asyncHandler(async (req, res, next) => {
-  const { email, password, fullName, lastRequestDate } = req.body;
+  const { email, password } = req.body;
 
   // Check if user exists
   const userExists = await User.findOne({ email: email });
@@ -46,9 +46,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
   try {
     user = await User.create({
       email: email,
-      password: hashedpassword,
-      fullName: fullName,
-      lastRequestDate: lastRequestDate,
+      password: hashedpassword
     });
   } catch (error) {
     console.log(error);
@@ -89,7 +87,7 @@ const getEmail = (accessToken) => {
 
 const getId = (accessToken) => {
   if (accessToken && accessToken !== "undefined") {
-    return decodeToken(accessToken).id;
+    return decodeToken(accessToken)._id;
   }
 
   return null;
@@ -97,7 +95,7 @@ const getId = (accessToken) => {
 
 const getUser = (accessToken) => {
   if (accessToken && accessToken !== "undefined") {
-    return User.findOne({ email: decodeToken(accessToken).email });
+    return User.findOne({ _id: decodeToken(accessToken)._id });
   }
 };
 

@@ -10,7 +10,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
       const decoded = decodeToken(req.cookies.access_token);
 
       // Find user in database and check if password is correct
-      const user = await User.findOne({ email: decoded.email });
+      const user = await User.findOne({ _id: decoded._id });
       if (!user) {
         req.authenticateSuccess = false;
         return next();
@@ -43,9 +43,9 @@ const authenticate = asyncHandler(async (req, res, next) => {
   }
 });
 
-const generateToken = (email, password) => {
+const generateToken = (_id, password) => {
   return jwt.sign(
-    { email: email, password: password },
+    { _id: id, password: password },
     process.env.JWT_SECRET,
     {
       expiresIn: "30d",
