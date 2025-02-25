@@ -86,8 +86,6 @@ const loadNote = asyncHandler(async (req, res, next) => {
 
   const noteId = req.params.id;
   const note = userObj.notes.find((note) => note._id == noteId);
-  console.log(note.title);
-  console.log(note.content);
   if (!note) {
     return res.status(404).json({ message: "Note not found" });
   }
