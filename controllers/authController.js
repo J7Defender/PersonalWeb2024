@@ -45,7 +45,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
 
 const generateToken = (_id, password) => {
   return jwt.sign(
-    { _id: id, password: password },
+    { _id: _id, password: password },
     process.env.JWT_SECRET,
     {
       expiresIn: "30d",
