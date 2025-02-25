@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { get } from "mongoose";
 import asyncHandler from "express-async-handler";
 const Schema = mongoose.Schema;
 import { User } from "../models/userModel.js";
 import { Note } from "../models/noteModel.js";
 import { decodeToken } from "./authController.js";
-import { getEmail, isLoggedIn } from "./userController.js";
+import { getEmail, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
   if (!isLoggedIn(req.cookies.access_token)) {
@@ -56,10 +56,13 @@ const getNote = asyncHandler(async (req, res, next) => {
 const createNote = asyncHandler(async (req, res, next) => {
   let note;
   try {
+    user = getUser(req.cookies.access_token);
+
     note = await Note.create({
       title: "New Note",
       content: "",
       shorten: "",
+      owner: user._id,
     });
 
     if (note) {

@@ -87,4 +87,18 @@ const getEmail = (accessToken) => {
   return null;
 };
 
-export { loginUser, registerUser, logoutUser, isLoggedIn, getEmail };
+const getId = (accessToken) => {
+  if (accessToken && accessToken !== "undefined") {
+    return decodeToken(accessToken).id;
+  }
+
+  return null;
+};
+
+const getUser = (accessToken) => {
+  if (accessToken && accessToken !== "undefined") {
+    return User.findOne({ email: decodeToken(accessToken).email });
+  }
+};
+
+export { loginUser, registerUser, logoutUser, isLoggedIn, getEmail, getUser, getId };

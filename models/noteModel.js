@@ -11,7 +11,12 @@ const noteSchema = mongoose.Schema({
   },
   shorten: {
     type: String, // Maximum length of 16 Megabytes
-  }
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 // TODO: Implement for storing much longer text using GridFS
