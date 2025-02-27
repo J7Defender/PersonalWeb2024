@@ -13,11 +13,12 @@
         <ul>
           <% notes.forEach(note => { %>
           <li>
-            <button class="list-button">
+            <form action="/note/<%= note._id%>" method="GET" style="display: inline">
+              <button type="submit" class="list-button">
               <h3><%= note.title %></h3>
-              <!-- TODO: Find a way to display shorten part of the note content -->
-              <!-- <p><%= note.content %></p> -->
-            </button>
+              <p class="ml-0 text-left"><%= note.shorten %></p>
+              </button>
+            </form>
           </li>
           <% }) %>
         </ul>

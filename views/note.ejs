@@ -13,18 +13,19 @@
     <% } else { %>
     <div class="note-container">
       <h2>Your Note</h2>
-      <label for="title">Title:</label>
-      <br />
-      <input
-        type="text"
-        id="title"
-        name="title"
-        placeholder="Enter note title here..."
-        value="<%= title %>"
-      />
-      <br />
-      <label for="note">Content:</label>
-      <form action="/note" method="post">
+      <form action="/note/<%= _id %>" method="post">
+        <label for="title">Title:</label>
+        <br />
+        <input
+          type="text"
+          id="title"
+          name="title"
+          placeholder="Enter note title here..."
+          value="<%= noteTitle %>"
+        />
+        <br />
+        <label for="content">Content:</label>
+        <br />
         <textarea
           name="content"
           id="content"

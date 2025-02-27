@@ -4,9 +4,7 @@ import logger from "morgan";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-import {loginUser, registerUser, logoutUser} from "./controllers/userController.js";
 import {authenticate} from "./controllers/authController.js";
-import {getNotesList, getNote, createNote, loadNote} from "./controllers/noteController.js";
 import {JWT_SECRET} from "./config/config.js";
 
 import {dirname} from "path";

@@ -31,25 +31,6 @@ const getNotesList = asyncHandler(async (req, res, next) => {
   });
 });
 
-// Get a single note from user
-const getNote = asyncHandler(async (req, res, next) => {
-  const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id });
-
-  try {
-    let notes = await userObj.populate("notes").execPopulate();
-    if (notes) {
-      console.log(notes);
-
-      // TODO: Display notes if user has that certain note
-    } else {
-      // TODO: Something if user has no notes
-    }
-  } catch (err) {
-    console.log(err);
-  }
-});
-
 const createNote = asyncHandler(async (req, res, next) => {
   let note;
   try {
@@ -93,9 +74,36 @@ const loadNote = asyncHandler(async (req, res, next) => {
   return res.render("note", {
     title: "Note",
     authenticated: true,
-    title: note.title,
+    noteTitle: note.title,
     content: note.content,
+    _id: noteId,
   });
 });
 
-export { getNotesList, getNote, createNote, loadNote };
+const saveNote = asyncHandler(async (req, res, next) => {
+  // TODO: Save note content to database
+  const _id = getId(req.cookies.access_token);
+  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
+
+  const noteId = req.params.id;
+  const note = userObj.notes.find((note) => note._id == noteId);
+
+  if (!note) {
+    return res.status(404).json({ message: "Note not found" });
+  }
+
+  note.title = req.body.title;
+  note.content = req.body.content;
+  note.shorten = req.body.content ? (req.body.content.substring(0, 20) + " ...") : "";
+
+  try {
+    await note.save();
+    console.log("[noteController] Note updated successfully");
+    return res.redirect("/list");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Failed to update note" });
+  }
+});
+
+export { getNotesList, createNote, loadNote, saveNote };
