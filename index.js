@@ -3,34 +3,28 @@ import bodyParser from "body-parser";
 import logger from "morgan";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
 import {authenticate} from "./controllers/authController.js";
-import {JWT_SECRET} from "./config/config.js";
 
 import {dirname} from "path";
 import {fileURLToPath} from "url";
-
-// Connect to MongoDB using Mongoose
-import("./config/database.js");
 
 // Import routes
 import userRoutes from "./routes/userRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 
+// Import dotenv
+dotenv.config();
+
+// Connect to MongoDB using Mongoose
+import("./config/database.js");
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
-const port = 3000;
-
-// These public paths can be accessed without being authenticated
-const publicPaths = ["/signin", "/register", "/"];
 
 // Use public directory for css and other assets
 app.use(express.static(__dirname + '/public'));
-
-// Set environment variables
-// TODO: Set these flags in .env file
-process.env.JWT_SECRET = JWT_SECRET;
-process.env.DEBUG_ENABLED = "true";
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -44,7 +38,7 @@ app.get("/favicon.ico", (req, res) => {
 });
 
 app.use(authenticate, (req, res, next) => {
-	if (req.method === "GET" && !req.authenticateSuccess && !publicPaths.includes(req.path)) {
+	if (req.method === "GET" && !req.authenticateSuccess && !process.env.publicPaths.includes(req.path)) {
 		return res.redirect("/signin");
 	}
 
@@ -69,6 +63,6 @@ app.get("*", (req, res) => {
 	});
 });
 
-app.listen(port, () => {
-	console.log(`Server is running on port ${port}`);
+app.listen(process.env.PORT, () => {
+	console.log(`Server is running on port ${process.env.PORT}`);
 });
