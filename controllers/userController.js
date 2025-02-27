@@ -46,7 +46,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
   try {
     user = await User.create({
       email: email,
-      password: hashedpassword
+      password: hashedpassword,
     });
     await user.save();
   } catch (error) {
@@ -71,33 +71,52 @@ const logoutUser = asyncHandler(async (req, res, next) => {
 });
 
 const isLoggedIn = (accessToken) => {
-  if (accessToken && accessToken !== "undefined") {
-    return true;
+  if (!accessToken || accessToken === "undefined") {
+    return false;
   }
 
-  return false;
+  return true;
 };
 
 const getEmail = (accessToken) => {
-  if (accessToken && accessToken !== "undefined") {
-    return decodeToken(accessToken).email;
+  if (!accessToken || accessToken === "undefined") {
+    return null;
   }
 
-  return null;
+  return decodeToken(accessToken).email;
 };
 
 const getId = (accessToken) => {
-  if (accessToken && accessToken !== "undefined") {
-    return decodeToken(accessToken)._id;
+  if (!accessToken || accessToken === "undefined") {
+    return null;
   }
 
-  return null;
+  return decodeToken(accessToken)._id;
 };
 
-const getUser = (accessToken) => {
-  if (accessToken && accessToken !== "undefined") {
-    return User.findOne({ _id: decodeToken(accessToken)._id });
+const getUserByToken = (accessToken) => {
+  if (!accessToken || accessToken === "undefined") {
+    return null;
   }
+  
+  return User.findById(decodeToken(accessToken)._id);
 };
 
-export { loginUser, registerUser, logoutUser, isLoggedIn, getEmail, getUser, getId };
+const getUserById = (userId) => {
+  if (!userId || userId === "undefined") {
+    return null;
+  }
+
+  return User.findById(userId)
+};
+
+export {
+  loginUser,
+  registerUser,
+  logoutUser,
+  isLoggedIn,
+  getEmail,
+  getId,
+  getUserByToken,
+  getUserById
+};

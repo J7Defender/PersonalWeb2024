@@ -38,11 +38,10 @@ app.get("/favicon.ico", (req, res) => {
 });
 
 app.use(authenticate, (req, res, next) => {
-	if (req.method === "GET" && !req.authenticateSuccess && !process.env.publicPaths.includes(req.path)) {
+	if (req.method === "GET" && !req.userId && !process.env.publicPaths.includes(req.path)) {
 		return res.redirect("/signin");
 	}
 
-	req.authenticateSuccess = req.authenticateSuccess || false;
 	return next();
 });
 
@@ -52,7 +51,7 @@ app.use("/", noteRoutes);
 app.get("/", (req, res) => {
 	return res.render("index", {
 		title: "Index",
-		authenticated: req.authenticateSuccess,
+		authenticated: req.userId,
 	});
 });
 

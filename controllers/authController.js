@@ -9,10 +9,11 @@ const authenticate = asyncHandler(async (req, res, next) => {
       // Decode the access token
       const decoded = decodeToken(req.cookies.access_token);
 
+      // TODO: Find if there is any other way to check while not having to find user in database
       // Find user in database and check if password is correct
-      const user = await User.findOne({ _id: decoded._id });
+      const user = await User.findById(decoded._id);
       if (!user) {
-        req.authenticateSuccess = false;
+        req.userId = undefined;
         return next();
       }
 
@@ -20,11 +21,11 @@ const authenticate = asyncHandler(async (req, res, next) => {
       console.log("[authenticate] We found user in database");
       if (decoded.password === user.password) {
         // Password is correct
-        req.authenticateSuccess = true;
+        req.userId = decoded._id;
         console.log("[authenticate] Password is correct");
       } else {
         // Password is NOT correct
-        req.authenticateSuccess = false;
+        req.userId = undefined;
         console.log("[authenticate] Password is incorrect");
       }
       return next();
@@ -32,13 +33,13 @@ const authenticate = asyncHandler(async (req, res, next) => {
       res.clearCookie("access_token");
       console.log("[authenticate] Error: " + err);
       console.log("[authenticate] Error: Clearing cookie");
-      req.authenticateSuccess = false;
+      req.userId = undefined;
       return next();
     }
   } else {
     console.log("[authenticate] No access token found");
     console.log("[authenticate] User is not authenticated");
-    req.authenticateSuccess = false;
+    req.userId = undefined;
     return next();
   }
 });

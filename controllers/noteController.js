@@ -1,18 +1,10 @@
 import mongoose, { get } from "mongoose";
 import asyncHandler from "express-async-handler";
-const Schema = mongoose.Schema;
 import { User } from "../models/userModel.js";
 import { Note } from "../models/noteModel.js";
-import { decodeToken } from "./authController.js";
-import { getId, isLoggedIn, getUser } from "./userController.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
-  const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
-
-  if (!userObj) {
-    return res.status(404).json({ message: "User not found" });
-  }
+  const userObj = await User.findById(req.userId).populate("notes").exec();
 
   try {
     return res.render("list", {
@@ -34,17 +26,15 @@ const getNotesList = asyncHandler(async (req, res, next) => {
 const createNote = asyncHandler(async (req, res, next) => {
   let note;
   try {
-    const _id = getId(req.cookies.access_token);
-
     note = await Note.create({
       title: "Untitled",
       content: "",
       shorten: "",
-      owner: _id,
+      owner: req.userId,
     });
     await note.save();
 
-    const user = await User.findOne({ _id: _id });
+    const user = await User.findById(req.userId);
     user.notes.push(note);
     await user.save();
 
@@ -62,8 +52,7 @@ const createNote = asyncHandler(async (req, res, next) => {
 });
 
 const loadNote = asyncHandler(async (req, res, next) => {
-  const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
+  const userObj = await User.findById(req.userId).populate("notes").exec();
 
   const noteId = req.params.id;
   const note = userObj.notes.find((note) => note._id == noteId);
@@ -81,9 +70,7 @@ const loadNote = asyncHandler(async (req, res, next) => {
 });
 
 const saveNote = asyncHandler(async (req, res, next) => {
-  // TODO: Save note content to database
-  const _id = getId(req.cookies.access_token);
-  const userObj = await User.findOne({ _id: _id }).populate("notes").exec();
+  const userObj = await User.findById(req.userId).populate("notes").exec();
 
   const noteId = req.params.id;
   const note = userObj.notes.find((note) => note._id == noteId);
