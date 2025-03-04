@@ -1,5 +1,5 @@
 import express from "express";
-import {loginUser, registerUser, logoutUser} from "../controllers/userController.js";
+import {loginUser, registerUser, logoutUser, getProfile, saveProfile} from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -15,6 +15,7 @@ router.get("/signin", (req, res) => {
 });
 
 router.post("/signin", loginUser, (req, res) => {
+    console.log("[userRoutes.js] PostLogin");
     if (req.userExists && req.loginSuccess) {
         return res.redirect("/list");
     } else {
@@ -53,6 +54,12 @@ router.post("/register", registerUser, (req, res) => {
         });
         // TODO: Handle if user has failed to register
     }
+});
+
+router.get("/profile", getProfile);
+
+router.post("/profile", saveProfile, (req, res) => {
+    return res.redirect("/");
 });
 
 router.get("/logout", logoutUser, (req, res) => {

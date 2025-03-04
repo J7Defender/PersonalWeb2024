@@ -1,7 +1,11 @@
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
-import { generateToken, decodeToken } from "./authController.js";
+import {
+  generateToken,
+  decodeToken,
+  generateHashPassword,
+} from "./authController.js";
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -38,8 +42,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
   }
 
   // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedpassword = await bcrypt.hash(password, salt);
+  const hashedpassword = await generateHashPassword(password);
 
   // Create user in database
   let user;
@@ -70,6 +73,45 @@ const logoutUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
+const getProfile = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.userId);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+  }
+
+  try {
+    res.render("profile", {
+      title: "Profile",
+      authenticated: true,
+      user: user,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+const saveProfile = asyncHandler(async (req, res, next) => {
+  const {email, password} = req.body;
+  const user = await User.findById(req.userId);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found" });
+  }
+
+  try {
+    user.email = email || user.email;
+    if (password) {
+      user.password = await generateHashPassword(password);
+    }
+    await user.save();
+    return next();
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ message: "User profile update failed" });
+  }
+});
+
 const isLoggedIn = (accessToken) => {
   if (!accessToken || accessToken === "undefined") {
     return false;
@@ -98,7 +140,7 @@ const getUserByToken = (accessToken) => {
   if (!accessToken || accessToken === "undefined") {
     return null;
   }
-  
+
   return User.findById(decodeToken(accessToken)._id);
 };
 
@@ -107,7 +149,7 @@ const getUserById = (userId) => {
     return null;
   }
 
-  return User.findById(userId)
+  return User.findById(userId);
 };
 
 export {
@@ -118,5 +160,7 @@ export {
   getEmail,
   getId,
   getUserByToken,
-  getUserById
+  getUserById,
+  getProfile,
+  saveProfile,
 };
