@@ -73,6 +73,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 const logoutUser = asyncHandler(async (req, res, next) => {
   res.clearCookie("access_token");
+  return showAlert(errorCodes.USER_SIGNED_OUT, req, res);
 
   return next();
 });

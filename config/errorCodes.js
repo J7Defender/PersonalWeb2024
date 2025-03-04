@@ -26,6 +26,9 @@ const errorCodes = {
     WRONG_USERNAME_OR_PASSWORD: {
         message: 'Wrong username or password',
     },
+    USER_SIGNED_OUT: {
+        message: 'User has signed out',
+    },
 };
 
 export { errorCodes };
