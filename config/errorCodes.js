@@ -20,6 +20,9 @@ const errorCodes = {
     USER_UPDATE_FAILED: {
         message: 'User failed to update',
     },
+    USER_REGISTER_FAILED: {
+        message: 'User failed to register',
+    },
     WRONG_USERNAME_OR_PASSWORD: {
         message: 'Wrong username or password',
     },

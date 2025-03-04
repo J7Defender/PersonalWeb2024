@@ -17,8 +17,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     req.userExists = true;
   } else {
     req.userExists = false;
-    showAlert(errorCodes.USER_NOT_FOUND, req, res, next);
-    return next();
+    return showAlert(errorCodes.USER_NOT_FOUND, req, res);
   }
 
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -27,8 +26,8 @@ const loginUser = asyncHandler(async (req, res, next) => {
     console.log("User logged in successfully");
   } else {
     req.loginSuccess = false;
-    showAlert(errorCodes.WRONG_USERNAME_OR_PASSWORD, req, res, next);
     console.log("User has entered the wrong username or password");
+    return showAlert(errorCodes.WRONG_USERNAME_OR_PASSWORD, req, res);
   }
 
   return next();
@@ -66,6 +65,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
   } else {
     req.registerSuccess = false;
     console.log("User registration failed");
+    return showAlert(errorCodes.USER_REGISTER_FAILED, req, res);
   }
 
   return next();
