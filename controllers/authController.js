@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import asyncHandler from "express-async-handler";
 import { User } from "../models/userModel.js";
 
@@ -54,8 +55,13 @@ const generateToken = (_id, password) => {
   );
 };
 
+const generateHashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
+
 const decodeToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET);
 };
 
-export { authenticate, generateToken, decodeToken };
+export { authenticate, generateToken, decodeToken, generateHashPassword };

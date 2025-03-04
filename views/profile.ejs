@@ -1,0 +1,22 @@
+<html lang="en">
+  <head>
+    <%- include('./partials/head') %>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  </head>
+  <body class="bg-light d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4" style="width: 600px;">
+      <h1 class="text-center">Change Your Profile Information</h1>
+      <form action="/profile" method="post">
+        <div class="form-group">
+          <label for="email">Change your username here:</label>
+          <input type="text" class="form-control" name="email" id="email" value="<%= user.email %>"/>
+        </div>
+        <div class="form-group">
+          <label for="password">Enter your new password:</label>
+          <input type="password" class="form-control" name="password" id="password" placeholder="Enter your new password"/>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+    </div>
+  </body>
+</html>
