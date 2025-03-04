@@ -6,6 +6,8 @@ import {
   decodeToken,
   generateHashPassword,
 } from "./authController.js";
+import { showAlert } from "./errorHandler.js";
+import { errorCodes } from "../config/errorCodes.js";
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -15,6 +17,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     req.userExists = true;
   } else {
     req.userExists = false;
+    showAlert(errorCodes.USER_NOT_FOUND, req, res, next);
     return next();
   }
 
@@ -24,6 +27,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     console.log("User logged in successfully");
   } else {
     req.loginSuccess = false;
+    showAlert(errorCodes.WRONG_USERNAME_OR_PASSWORD, req, res, next);
     console.log("User has entered the wrong username or password");
   }
 

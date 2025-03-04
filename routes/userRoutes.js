@@ -15,7 +15,6 @@ router.get("/signin", (req, res) => {
 });
 
 router.post("/signin", loginUser, (req, res) => {
-    console.log("[userRoutes.js] PostLogin");
     if (req.userExists && req.loginSuccess) {
         return res.redirect("/list");
     } else {
