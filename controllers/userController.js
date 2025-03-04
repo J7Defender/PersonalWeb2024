@@ -11,7 +11,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     req.userExists = true;
   } else {
     req.userExists = false;
-    next();
+    return next();
   }
 
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -23,7 +23,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     console.log("User has entered the wrong username or password");
   }
 
-  next();
+  return next();
 });
 
 const registerUser = asyncHandler(async (req, res, next) => {
@@ -34,7 +34,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
   if (userExists) {
     req.userExists = true;
-    next();
+    return next();
   }
 
   // Hash password
@@ -61,13 +61,13 @@ const registerUser = asyncHandler(async (req, res, next) => {
     console.log("User registration failed");
   }
 
-  next();
+  return next();
 });
 
 const logoutUser = asyncHandler(async (req, res, next) => {
   res.clearCookie("access_token");
 
-  next();
+  return next();
 });
 
 const isLoggedIn = (accessToken) => {
