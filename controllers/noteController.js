@@ -57,8 +57,11 @@ const loadNote = asyncHandler(async (req, res, next) => {
   const noteId = req.params.id;
   const note = userObj.notes.find((note) => note._id == noteId);
   if (!note) {
-    return res.status(404).json({ message: "Note not found" });
+    return res.status(404).json({ message: "Note not found or is not yours" });
   }
+
+  // TODO: Find better way to check if note is not yours
+  // Do by server only and record logs for unauthorized access
 
   return res.render("note", {
     title: "Note",
