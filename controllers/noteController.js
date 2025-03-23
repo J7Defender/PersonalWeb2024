@@ -96,4 +96,30 @@ const saveNote = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { getNotesList, createNote, loadNote, saveNote };
+const deleteNote = asyncHandler(async (req, res, next) => {
+  console.log("[noteController] Delete note");
+  const userObj = await User.findById(req.userId).populate("notes").exec();
+
+  const noteId = req.params.id;
+  const note = userObj.notes.find((note) => note._id == noteId);
+
+  if (!note) {
+    return res.status(404).json({ message: "Note not found" });
+  }
+
+  try {
+    // Remove note from userObj
+    userObj.notes.pull({ _id: noteId });
+    await userObj.save();
+
+    // Delete note from db
+    await note.deleteOne();
+    console.log("[noteController] Note deleted successfully");
+    return res.redirect("/list");
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Failed to delete note" });
+  }
+});
+
+export { getNotesList, createNote, loadNote, saveNote, deleteNote };

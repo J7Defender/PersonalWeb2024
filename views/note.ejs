@@ -33,6 +33,9 @@
         ><%= content %></textarea>
         <button type="submit">Save</button>
       </form>
+      <form class="pt-2" action="/note/delete/<%= _id %>" method="post">
+        <button type="submit">Delete</button>
+      </form>
     </div>
     <% } %>
   </body>
