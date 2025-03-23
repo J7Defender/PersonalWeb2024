@@ -2,7 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Note } from "../models/noteModel.js";
 import {getNoteById, getUserById, getUserWithNotes} from "../utils/databaseUtils.js";
 
-const getNotesList = asyncHandler(async (req, res, next) => {
+const getNotesList = asyncHandler(async (req, res) => {
   const userObj = await getUserWithNotes(req.userId);
 
   console.log(userObj.notes);
@@ -23,7 +23,7 @@ const getNotesList = asyncHandler(async (req, res, next) => {
   });
 });
 
-const createNote = asyncHandler(async (req, res, next) => {
+const createNote = asyncHandler(async (req, res) => {
   let note;
   try {
     // Create a new note with default values in notes database
@@ -53,7 +53,7 @@ const createNote = asyncHandler(async (req, res, next) => {
   }
 });
 
-const loadNote = asyncHandler(async (req, res, next) => {
+const loadNote = asyncHandler(async (req, res) => {
   const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);
@@ -74,7 +74,7 @@ const loadNote = asyncHandler(async (req, res, next) => {
   });
 });
 
-const saveNote = asyncHandler(async (req, res, next) => {
+const saveNote = asyncHandler(async (req, res) => {
   const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);
@@ -99,7 +99,7 @@ const saveNote = asyncHandler(async (req, res, next) => {
   }
 });
 
-const deleteNote = asyncHandler(async (req, res, next) => {
+const deleteNote = asyncHandler(async (req, res) => {
   const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);

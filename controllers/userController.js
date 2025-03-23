@@ -72,7 +72,7 @@ const logoutUser = asyncHandler(async (req, res, next) => {
   return next();
 });
 
-const getProfile = asyncHandler(async (req, res, next) => {
+const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.userId);
 
   if (!user) {
@@ -112,11 +112,9 @@ const saveProfile = asyncHandler(async (req, res, next) => {
 });
 
 const isLoggedIn = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return false;
-  }
+  return !(!accessToken || accessToken === "undefined");
 
-  return true;
+
 };
 
 export {

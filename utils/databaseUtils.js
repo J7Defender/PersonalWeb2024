@@ -69,7 +69,7 @@ const getNoteById = async (userObj, noteId) => {
 
   let note;
   try {
-    note = await userObj.notes.find((note) => note._id == noteId);
+    note = await userObj.notes.find((note) => note._id === noteId);
   } catch (err) {
     console.log(err);
   }

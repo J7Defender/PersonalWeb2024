@@ -1,4 +1,4 @@
-import mongoose, { SchemaType } from "mongoose";
+import mongoose from "mongoose";
 
 const userSchema = mongoose.Schema({
   email: {
