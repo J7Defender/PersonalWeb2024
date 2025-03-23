@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
 import {
   generateToken,
-  decodeToken,
   generateHashPassword,
 } from "./authController.js";
 
@@ -120,47 +119,11 @@ const isLoggedIn = (accessToken) => {
   return true;
 };
 
-const getEmail = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  return decodeToken(accessToken).email;
-};
-
-const getId = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  return decodeToken(accessToken)._id;
-};
-
-const getUserByToken = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  return User.findById(decodeToken(accessToken)._id);
-};
-
-const getUserById = (userId) => {
-  if (!userId || userId === "undefined") {
-    return null;
-  }
-
-  return User.findById(userId);
-};
-
 export {
   loginUser,
   registerUser,
   logoutUser,
   isLoggedIn,
-  getEmail,
-  getId,
-  getUserByToken,
-  getUserById,
   getProfile,
   saveProfile,
 };

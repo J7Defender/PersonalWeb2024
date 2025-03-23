@@ -1,11 +1,11 @@
-import mongoose, { get } from "mongoose";
 import asyncHandler from "express-async-handler";
-import { User } from "../models/userModel.js";
 import { Note } from "../models/noteModel.js";
+import {getNoteById, getUserById, getUserWithNotes} from "../utils/databaseUtils.js";
 
 const getNotesList = asyncHandler(async (req, res, next) => {
-  const userObj = await User.findById(req.userId).populate("notes").exec();
+  const userObj = await getUserWithNotes(req.userId);
 
+  console.log(userObj.notes);
   try {
     return res.render("list", {
       title: "List",
@@ -26,6 +26,7 @@ const getNotesList = asyncHandler(async (req, res, next) => {
 const createNote = asyncHandler(async (req, res, next) => {
   let note;
   try {
+    // Create a new note with default values in notes database
     note = await Note.create({
       title: "Untitled",
       content: "",
@@ -34,7 +35,8 @@ const createNote = asyncHandler(async (req, res, next) => {
     });
     await note.save();
 
-    const user = await User.findById(req.userId);
+    // Save note to user list of notes
+    const user = await getUserById(req.userId);
     user.notes.push(note);
     await user.save();
 
@@ -52,10 +54,10 @@ const createNote = asyncHandler(async (req, res, next) => {
 });
 
 const loadNote = asyncHandler(async (req, res, next) => {
-  const userObj = await User.findById(req.userId).populate("notes").exec();
-
+  const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
-  const note = userObj.notes.find((note) => note._id == noteId);
+  const note = await getNoteById(userObj, noteId);
+
   if (!note) {
     return res.status(404).json({ message: "Note not found or is not yours" });
   }
@@ -73,10 +75,9 @@ const loadNote = asyncHandler(async (req, res, next) => {
 });
 
 const saveNote = asyncHandler(async (req, res, next) => {
-  const userObj = await User.findById(req.userId).populate("notes").exec();
-
+  const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
-  const note = userObj.notes.find((note) => note._id == noteId);
+  const note = await getNoteById(userObj, noteId);
 
   if (!note) {
     return res.status(404).json({ message: "Note not found" });
@@ -84,7 +85,9 @@ const saveNote = asyncHandler(async (req, res, next) => {
 
   note.title = req.body.title;
   note.content = req.body.content;
-  note.shorten = req.body.content ? (req.body.content.substring(0, 20) + " ...") : "";
+  note.shorten = req.body.content
+    ? req.body.content.substring(0, 20) + " ..."
+    : "";
 
   try {
     await note.save();
@@ -97,11 +100,9 @@ const saveNote = asyncHandler(async (req, res, next) => {
 });
 
 const deleteNote = asyncHandler(async (req, res, next) => {
-  console.log("[noteController] Delete note");
-  const userObj = await User.findById(req.userId).populate("notes").exec();
-
+  const userObj = await getUserWithNotes(req.userId);
   const noteId = req.params.id;
-  const note = userObj.notes.find((note) => note._id == noteId);
+  const note = await getNoteById(userObj, noteId);
 
   if (!note) {
     return res.status(404).json({ message: "Note not found" });
