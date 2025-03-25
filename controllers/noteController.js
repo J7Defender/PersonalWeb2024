@@ -3,7 +3,7 @@ import { Note } from "../models/noteModel.js";
 import {getNoteById, getUserById, getUserWithNotes} from "../utils/databaseUtils.js";
 
 const getNotesList = asyncHandler(async (req, res) => {
-  const userObj = await getUserWithNotes(req.userId);
+  const userObj = await getUserWithNotes(req.user._id);
 
   console.log(userObj.notes);
   try {
@@ -31,12 +31,12 @@ const createNote = asyncHandler(async (req, res) => {
       title: "Untitled",
       content: "",
       shorten: "",
-      owner: req.userId,
+      owner: req.user._id,
     });
     await note.save();
 
     // Save note to user list of notes
-    const user = await getUserById(req.userId);
+    const user = await getUserById(req.user._id);
     user.notes.push(note);
     await user.save();
 
@@ -54,7 +54,7 @@ const createNote = asyncHandler(async (req, res) => {
 });
 
 const loadNote = asyncHandler(async (req, res) => {
-  const userObj = await getUserWithNotes(req.userId);
+  const userObj = await getUserWithNotes(req.user._id);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);
 
@@ -75,7 +75,7 @@ const loadNote = asyncHandler(async (req, res) => {
 });
 
 const saveNote = asyncHandler(async (req, res) => {
-  const userObj = await getUserWithNotes(req.userId);
+  const userObj = await getUserWithNotes(req.user._id);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);
 
@@ -100,7 +100,7 @@ const saveNote = asyncHandler(async (req, res) => {
 });
 
 const deleteNote = asyncHandler(async (req, res) => {
-  const userObj = await getUserWithNotes(req.userId);
+  const userObj = await getUserWithNotes(req.user._id);
   const noteId = req.params.id;
   const note = await getNoteById(userObj, noteId);
 

@@ -1,33 +1,9 @@
 import asyncHandler from "express-async-handler";
-import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
 import {
   generateToken,
   generateHashPassword,
 } from "./authController.js";
-
-const loginUser = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
-
-  const user = await User.findOne({ email: email });
-  if (user) {
-    req.userExists = true;
-  } else {
-    req.userExists = false;
-    return next();
-  }
-
-  if (user && (await bcrypt.compare(password, user.password))) {
-    req.loginSuccess = true;
-    res.cookie("access_token", generateToken(user._id, user.password));
-    console.log("User logged in successfully");
-  } else {
-    req.loginSuccess = false;
-    console.log("User has entered the wrong username or password");
-  }
-
-  return next();
-});
 
 const registerUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -67,13 +43,17 @@ const registerUser = asyncHandler(async (req, res, next) => {
 });
 
 const logoutUser = asyncHandler(async (req, res, next) => {
-  res.clearCookie("access_token");
+  req.logout((err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
 
   return next();
 });
 
 const getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.userId);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     res.status(404).json({ message: "User not found" });
@@ -92,7 +72,7 @@ const getProfile = asyncHandler(async (req, res) => {
 
 const saveProfile = asyncHandler(async (req, res, next) => {
   const {email, password} = req.body;
-  const user = await User.findById(req.userId);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     res.status(404).json({ message: "User not found" });
@@ -118,7 +98,6 @@ const isLoggedIn = (accessToken) => {
 };
 
 export {
-  loginUser,
   registerUser,
   logoutUser,
   isLoggedIn,

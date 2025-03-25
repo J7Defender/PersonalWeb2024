@@ -1,5 +1,6 @@
 import express from "express";
-import {loginUser, registerUser, logoutUser, getProfile, saveProfile} from "../controllers/userController.js";
+import {registerUser, logoutUser, getProfile, saveProfile} from "../controllers/userController.js";
+import passport from "passport";
 
 const router = express.Router();
 
@@ -14,19 +15,15 @@ router.get("/signin", (req, res) => {
     });
 });
 
-router.post("/signin", loginUser, (req, res) => {
-    console.log("[userRoutes.js] PostLogin");
-    if (req.userExists && req.loginSuccess) {
-        return res.redirect("/list");
-    } else {
-        return res.render("signin", {
-            title: "Sign in",
-        });
-    }
-});
+router.post("/signin", 
+    passport.authenticate("local", {
+        successRedirect: "/",
+        failureRedirect: "/signin",
+    })
+);
 
 router.get("/register", (req, res) => {
-    if (req.authenticateSuccess) {
+    if (req.isAuthenticated()) {
         console.log("[index.js] User already logged in");
         return res.redirect("/");
     }
