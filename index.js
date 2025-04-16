@@ -10,6 +10,9 @@ import {authenticate} from "./controllers/authController.js";
 import {dirname} from "path";
 import {fileURLToPath} from "url";
 
+// Import config
+import { publicPaths } from "./config/config.js";
+
 // Import routes
 import userRoutes from "./routes/userRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
@@ -37,8 +40,9 @@ app.get("/favicon.ico", (req, res) => {
 	return res.sendStatus(204);
 });
 
+// Public paths does not require authentication
 app.use(authenticate, (req, res, next) => {
-	if (req.method === "GET" && !req.userId && !process.env.publicPaths.includes(req.path)) {
+	if (req.method === "GET" && !req.userId && !publicPaths.includes(req.path)) {
 		return res.redirect("/signin");
 	}
 

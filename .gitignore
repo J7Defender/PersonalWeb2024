@@ -131,6 +131,5 @@ dist
 
 # Template files and assets
 templates/
-config/config.js
 assets/
 .idea
