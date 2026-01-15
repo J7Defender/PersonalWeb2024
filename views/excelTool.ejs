@@ -1,0 +1,771 @@
+<%- include('./partials/head.ejs') %>
+<%- include('./partials/navBar.ejs') %>
+
+<style>
+	.excel-container {
+		max-width: 1200px;
+		margin: 2rem auto;
+		padding: 2rem;
+		background: #f8f9fa;
+		border-radius: 8px;
+	}
+
+	.section {
+		background: white;
+		padding: 2rem;
+		margin-bottom: 2rem;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	.section h2 {
+		margin-top: 0;
+		color: #333;
+		border-bottom: 2px solid #007bff;
+		padding-bottom: 1rem;
+	}
+
+	.form-group {
+		margin-bottom: 1.5rem;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 600;
+		color: #333;
+	}
+
+	.file-input-wrapper {
+		position: relative;
+		display: inline-block;
+		width: 100%;
+	}
+
+	input[type="file"],
+	input[type="text"],
+	input[type="number"] {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 1rem;
+		box-sizing: border-box;
+	}
+
+	input[type="file"]::file-selector-button {
+		background-color: #007bff;
+		color: white;
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		margin-right: 1rem;
+	}
+
+	input[type="file"]::file-selector-button:hover {
+		background-color: #0056b3;
+	}
+
+	input[type="text"]:focus,
+	input[type="number"]:focus,
+	input[type="file"]:focus {
+		outline: none;
+		border-color: #007bff;
+		box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+	}
+
+	button {
+		padding: 0.75rem 1.5rem;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 600;
+		transition: background-color 0.3s;
+	}
+
+	.btn-primary {
+		background-color: #007bff;
+		color: white;
+	}
+
+	.btn-primary:hover {
+		background-color: #0056b3;
+	}
+
+	.btn-success {
+		background-color: #28a745;
+		color: white;
+	}
+
+	.btn-success:hover {
+		background-color: #218838;
+	}
+
+	.btn-danger {
+		background-color: #dc3545;
+		color: white;
+		margin-left: 0.5rem;
+	}
+
+	.btn-danger:hover {
+		background-color: #c82333;
+	}
+
+	.autocomplete-container {
+		position: relative;
+		width: 100%;
+	}
+
+	#suggestions {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: white;
+		border: 1px solid #ddd;
+		border-top: none;
+		max-height: 200px;
+		overflow-y: auto;
+		border-radius: 0 0 4px 4px;
+		z-index: 1000;
+		display: none;
+	}
+
+	#suggestions.show {
+		display: block;
+	}
+
+	.suggestion-item {
+		padding: 0.75rem;
+		cursor: pointer;
+		border-bottom: 1px solid #f0f0f0;
+	}
+
+	.suggestion-item:last-child {
+		border-bottom: none;
+	}
+
+	.suggestion-item:hover,
+	.suggestion-item.selected {
+		background-color: #007bff;
+		color: white;
+	}
+
+	.input-row {
+		display: grid;
+		grid-template-columns: 2fr 1fr 1fr;
+		gap: 1rem;
+	}
+
+	.score-input {
+		max-width: 150px;
+	}
+
+	.data-table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 1rem;
+	}
+
+	.data-table thead {
+		background-color: #f8f9fa;
+	}
+
+	.data-table th,
+	.data-table td {
+		padding: 1rem;
+		text-align: left;
+		border-bottom: 1px solid #ddd;
+	}
+
+	.data-table th {
+		font-weight: 600;
+		color: #333;
+	}
+
+	.data-table tbody tr:hover {
+		background-color: #f8f9fa;
+	}
+
+	.data-table .btn-danger {
+		padding: 0.5rem 0.75rem;
+		font-size: 0.875rem;
+		margin-left: 0;
+	}
+
+	.alert {
+		padding: 1rem;
+		border-radius: 4px;
+		margin-bottom: 1rem;
+	}
+
+	.alert-info {
+		background-color: #d1ecf1;
+		color: #0c5460;
+		border: 1px solid #bee5eb;
+	}
+
+	.alert-success {
+		background-color: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+	}
+
+	.alert-error {
+		background-color: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
+	}
+
+	.button-group {
+		display: flex;
+		gap: 1rem;
+		margin-top: 1.5rem;
+	}
+
+	.button-group button {
+		flex: 1;
+	}
+
+	.empty-message {
+		text-align: center;
+		color: #666;
+		padding: 2rem;
+	}
+</style>
+
+<div class="excel-container">
+	<h1>Excel Tool - Quản Lý Điểm</h1>
+
+	<!-- Import Section -->
+	<div class="section">
+		<h2>1. Import File Excel</h2>
+		<div class="form-group">
+			<label for="excelFile">Chọn file Excel (.xlsx, .xls):</label>
+			<input type="file" id="excelFile" accept=".xlsx, .xls" />
+		</div>
+		<button id="applyBtn" class="btn-primary" style="display: none;">Xử Lý File</button>
+		<div id="importMessage"></div>
+		<div id="uploadProgress" style="display: none; margin-top: 1rem;">
+			<div style="height: 20px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+				<div id="progressBar" style="height: 100%; background: #28a745; width: 0%; transition: width 0.3s;"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Score Entry Section -->
+	<div class="section" id="scoreSection" style="display: none;">
+		<h2>2. Nhập Điểm</h2>
+		<div class="input-row">
+			<div class="form-group">
+				<label for="personSelect">Chọn Người:</label>
+				<div class="autocomplete-container">
+					<input 
+						type="text" 
+						id="personSelect" 
+						placeholder="Gõ tên hoặc bấm Enter để chọn..."
+						autocomplete="off"
+					/>
+					<div id="suggestions"></div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="score1">Điểm 1:</label>
+				<input type="number" id="score1" placeholder="0" step="0.1" class="score-input" />
+			</div>
+			<div class="form-group">
+				<label for="score2">Điểm 2:</label>
+				<input type="number" id="score2" placeholder="0" step="0.1" class="score-input" />
+			</div>
+		</div>
+
+		<!-- Information Display Section -->
+		<div id="personInfoSection" style="display: none; background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #007bff;">
+			<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+				<div>
+					<strong>STT:</strong>
+					<p id="infSequenceNum" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
+				</div>
+				<div>
+					<strong>Mã Sinh Viên:</strong>
+					<p id="infStudentId" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
+				</div>
+				<div>
+					<strong>Ngày Sinh:</strong>
+					<p id="infDateOfBirth" style="margin: 0.5rem 0 0 0; color: #666;">-</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="button-group">
+			<button id="clearScoreBtn" class="btn-danger">Xóa</button>
+			<button id="clearAllBtn" class="btn-danger">Xóa tất cả</button>
+		</div>
+		<div id="scoreMessage"></div>
+	</div>
+
+	<!-- Data Display Section -->
+	<div class="section" id="dataSection" style="display: none;">
+		<h2>3. Dữ Liệu Đã Lưu</h2>
+		<div id="dataContainer">
+			<div class="empty-message">Chưa có dữ liệu</div>
+		</div>
+	</div>
+
+	<!-- Export Section -->
+	<div class="section" id="exportSection" style="display: none;">
+		<h2>4. Xuất File Excel</h2>
+		<button id="exportBtn" class="btn-success">Xuất File Excel</button>
+		<div id="exportMessage"></div>
+	</div>
+</div>
+
+<script>
+	let importedData = {
+		people: [],
+		sheetName: ''
+	};
+	let savedScores = [];
+	let filteredPeople = [];
+	let selectedIndex = -1;
+
+	// File import handler
+	document.getElementById('excelFile').addEventListener('change', handleFileSelect);
+
+	function handleFileSelect(e) {
+		const file = e.target.files[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append('file', file);
+
+		const progressDiv = document.getElementById('uploadProgress');
+		const progressBar = document.getElementById('progressBar');
+		progressDiv.style.display = 'block';
+
+		const xhr = new XMLHttpRequest();
+		xhr.upload.addEventListener('progress', function(event) {
+			if (event.lengthComputable) {
+				const percentComplete = (event.loaded / event.total) * 100;
+				progressBar.style.width = percentComplete + '%';
+			}
+		});
+
+		xhr.addEventListener('load', function() {
+			progressDiv.style.display = 'none';
+			if (xhr.status === 200) {
+				const response = JSON.parse(xhr.responseText);
+				if (response.success) {
+					document.getElementById('applyBtn').style.display = 'inline-block';
+					showMessage('importMessage', 'File đã được tải. Bấm "Xử Lý File" để tiếp tục.', 'info');
+				} else {
+					showMessage('importMessage', response.message || 'Lỗi khi tải file', 'error');
+				}
+			} else {
+				showMessage('importMessage', 'Lỗi khi tải file', 'error');
+			}
+		});
+
+		xhr.addEventListener('error', function() {
+			progressDiv.style.display = 'none';
+			showMessage('importMessage', 'Lỗi khi tải file', 'error');
+		});
+
+		xhr.open('POST', '/api/excel/upload');
+		xhr.send(formData);
+	}
+
+	// Apply button handler
+	document.getElementById('applyBtn').addEventListener('click', function() {
+		fetch('/api/excel/apply-sheet', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({})
+		})
+		.then(res => res.json())
+		.then(data => {
+			if (data.success) {
+				importedData.people = data.people;
+				// do not clear existing savedScores when applying a sheet
+				showMessage('importMessage', data.message, 'success');
+				
+				// Show score entry section
+				document.getElementById('scoreSection').style.display = 'block';
+				document.getElementById('dataSection').style.display = 'block';
+				document.getElementById('exportSection').style.display = 'block';
+				
+				// Load existing scores
+				loadScores();
+			} else {
+				showMessage('importMessage', data.message, 'error');
+			}
+		})
+		.catch(error => {
+			showMessage('importMessage', 'Lỗi: ' + error.message, 'error');
+		});
+	});
+
+	// Autocomplete handler
+	const personInput = document.getElementById('personSelect');
+	const suggestionsDiv = document.getElementById('suggestions');
+
+	personInput.addEventListener('input', function(e) {
+		const value = this.value.toLowerCase();
+		selectedIndex = -1;
+
+		if (!value) {
+			suggestionsDiv.classList.remove('show');
+			return;
+		}
+
+		filteredPeople = importedData.people.filter(item => 
+			item.name.toLowerCase().includes(value)
+		);
+
+		if (filteredPeople.length === 0) {
+			suggestionsDiv.classList.remove('show');
+			return;
+		}
+
+		suggestionsDiv.innerHTML = filteredPeople
+			.map((item, index) => `<div class="suggestion-item" data-index="${index}">${item.name}</div>`)
+			.join('');
+
+		suggestionsDiv.classList.add('show');
+
+		// Add click handlers
+		document.querySelectorAll('.suggestion-item').forEach(item => {
+			item.addEventListener('click', function() {
+				const selectedName = this.textContent;
+				personInput.value = selectedName;
+				suggestionsDiv.classList.remove('show');
+				selectedIndex = -1;
+				filteredPeople = [];
+				showPersonInfo(selectedName);
+			});
+		});
+	});
+
+	// Function to display person information
+	function showPersonInfo(personName) {
+		const personData = importedData.people.find(p => p.name === personName);
+		if (personData) {
+			document.getElementById('infSequenceNum').textContent = personData.sequenceNum || '-';
+			document.getElementById('infStudentId').textContent = personData.studentId || '-';
+			document.getElementById('infDateOfBirth').textContent = personData.dateOfBirth || '-';
+			document.getElementById('personInfoSection').style.display = 'block';
+		} else {
+			document.getElementById('personInfoSection').style.display = 'none';
+		}
+	}
+
+	// Keyboard navigation for suggestions
+	personInput.addEventListener('keydown', function(e) {
+		if (!suggestionsDiv.classList.contains('show')) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				// Show all people
+				filteredPeople = importedData.people;
+				suggestionsDiv.innerHTML = filteredPeople
+					.map((item, index) => `<div class="suggestion-item" data-index="${index}">${item.name}</div>`)
+					.join('');
+				suggestionsDiv.classList.add('show');
+				selectedIndex = 0;
+				updateSuggestionSelection();
+			}
+			return;
+		}
+
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			selectedIndex = (selectedIndex + 1) % filteredPeople.length;
+			updateSuggestionSelection();
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			selectedIndex = selectedIndex <= 0 ? filteredPeople.length - 1 : selectedIndex - 1;
+			updateSuggestionSelection();
+		} else if (e.key === 'Enter') {
+			e.preventDefault();
+			if (selectedIndex >= 0) {
+				const selectedPerson = filteredPeople[selectedIndex];
+				personInput.value = selectedPerson.name;
+				suggestionsDiv.classList.remove('show');
+				selectedIndex = -1;
+				filteredPeople = [];
+				showPersonInfo(selectedPerson.name);
+				// Focus on score1 input
+				score1Input.focus();
+			}
+		} else if (e.key === 'Escape') {
+			suggestionsDiv.classList.remove('show');
+			selectedIndex = -1;
+		}
+	});
+
+	function updateSuggestionSelection() {
+		document.querySelectorAll('.suggestion-item').forEach((item, index) => {
+			if (index === selectedIndex) {
+				item.classList.add('selected');
+				item.scrollIntoView({block: 'nearest'});
+			} else {
+				item.classList.remove('selected');
+			}
+		});
+	}
+	// Auto-save score on Enter or blur
+	const score1Input = document.getElementById('score1');
+	const score2Input = document.getElementById('score2');
+
+	function saveCurrentScore() {
+		const person = personInput.value.trim();
+		const score1 = score1Input.value;
+		const score2 = score2Input.value;
+
+		if (!person) {
+			showMessage('scoreMessage', 'Vui lòng chọn một người', 'error');
+			return;
+		}
+
+		if (!score1 && !score2) {
+			return; // No scores to save
+		}
+
+		fetch('/api/excel/save-score', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ person, score1, score2 })
+		})
+		.then(res => res.json())
+		.then(data => {
+			if (data.success) {
+				savedScores = data.scores;
+				showMessage('scoreMessage', `✓ Đã lưu ${person}`, 'success');
+				
+				// Clear inputs
+				personInput.value = '';
+				score1Input.value = '';
+				score2Input.value = '';
+				suggestionsDiv.classList.remove('show');
+
+				updateDataTable();
+					saveLocalScores(savedScores);
+			} else {
+				showMessage('scoreMessage', data.message, 'error');
+			}
+		})
+		.catch(error => {
+			showMessage('scoreMessage', 'Lỗi: ' + error.message, 'error');
+		});
+	}
+
+	// Save on Enter key
+	score1Input.addEventListener('keydown', function(e) {
+		if (e.key === 'Tab') {
+			e.preventDefault();
+			score2Input.focus();
+		}
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			saveCurrentScore();
+		}
+	});
+
+	score2Input.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			saveCurrentScore();
+		}
+	});
+
+	// Clear score handler
+	document.getElementById('clearScoreBtn').addEventListener('click', function() {
+		personInput.value = '';
+		score1Input.value = '';
+		score2Input.value = '';
+		suggestionsDiv.classList.remove('show');
+		showMessage('scoreMessage', '', '');
+	});
+
+	// Load scores from server (returns a promise)
+	function loadScores() {
+		return fetch('/api/excel/scores')
+		.then(res => res.json())
+		.then(data => {
+			if (data.success) {
+				savedScores = data.scores;
+				updateDataTable();
+			}
+			return data;
+		})
+		.catch(error => {
+			console.error('Error loading scores:', error);
+			return { success: false };
+		});
+	}
+
+	// Update data table
+	function updateDataTable() {
+		const container = document.getElementById('dataContainer');
+		
+		if (savedScores.length === 0) {
+			container.innerHTML = '<div class="empty-message">Chưa có dữ liệu</div>';
+			return;
+		}
+
+		let html = `
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>STT</th>
+						<th>Tên</th>
+						<th>Mã SV</th>
+						<th>Ngày Sinh</th>
+						<th>Điểm 1</th>
+						<th>Điểm 2</th>
+						<th>Hành động</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+
+		savedScores.forEach((item, index) => {
+			html += `
+				<tr>
+					<td>${item.sequenceNum || '-'}</td>
+					<td>${item.person}</td>
+					<td>${item.studentId || '-'}</td>
+					<td>${item.dateOfBirth || '-'}</td>
+					<td>${item.score1 !== null ? item.score1 : '-'}</td>
+					<td>${item.score2 !== null ? item.score2 : '-'}</td>
+					<td><button class="btn-danger" onclick="deleteScore(${index})">Xóa</button></td>
+				</tr>
+			`;
+		});
+
+		html += '</tbody></table>';
+		container.innerHTML = html;
+	}
+
+	window.deleteScore = function(index) {
+		fetch('/api/excel/delete-score', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ index })
+		})
+		.then(res => res.json())
+		.then(data => {
+			if (data.success) {
+				savedScores = data.scores;
+				updateDataTable();
+				showMessage('scoreMessage', data.message, 'success');
+				saveLocalScores(savedScores);
+			} else {
+				showMessage('scoreMessage', data.message, 'error');
+			}
+		})
+		.catch(error => {
+			showMessage('scoreMessage', 'Lỗi: ' + error.message, 'error');
+		});
+	};
+
+	// Export handler
+	document.getElementById('exportBtn').addEventListener('click', function() {
+		if (savedScores.length === 0) {
+			showMessage('exportMessage', 'Không có dữ liệu để xuất', 'error');
+			return;
+		}
+
+		window.location.href = '/api/excel/export';
+		showMessage('exportMessage', 'File đang được tải xuống...', 'info');
+	});
+
+	function showMessage(elementId, message, type) {
+		const element = document.getElementById(elementId);
+		if (!message) {
+			element.innerHTML = '';
+			return;
+		}
+		element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+	}
+
+	// Local storage helpers (per user)
+	const currentUserId = '<%= typeof userId !== "undefined" ? userId : "" %>';
+	function localStorageKey() {
+		return `excelTool_saved_${currentUserId || 'anon'}`;
+	}
+
+	function saveLocalScores(arr) {
+		try {
+			localStorage.setItem(localStorageKey(), JSON.stringify(arr || []));
+		} catch (e) {
+			console.warn('Could not write to localStorage', e);
+		}
+	}
+
+	function loadLocalScores() {
+		try {
+			const raw = localStorage.getItem(localStorageKey());
+			return raw ? JSON.parse(raw) : null;
+		} catch (e) {
+			console.warn('Could not read localStorage', e);
+			return null;
+		}
+	}
+
+	// Restore local scores to server if server has none and people list exists
+	function restoreLocalIfNeeded() {
+		const local = loadLocalScores();
+		if (!local || !Array.isArray(local) || local.length === 0) return Promise.resolve();
+		if (savedScores && savedScores.length > 0) return Promise.resolve();
+		if (!importedData.people || importedData.people.length === 0) return Promise.resolve();
+
+		const promises = local.map(item => {
+			return fetch('/api/excel/save-score', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ person: item.person, score1: item.score1, score2: item.score2 })
+			}).then(r => r.json()).catch(() => null);
+		});
+
+		return Promise.all(promises).then(() => loadScores());
+	}
+
+	// Clear all handler (server + local)
+	document.getElementById('clearAllBtn').addEventListener('click', function() {
+		if (!confirm('Bạn có chắc muốn xóa tất cả dữ liệu đã nhập?')) return;
+		fetch('/api/excel/clear-scores', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' }
+		})
+		.then(res => res.json())
+		.then(data => {
+			if (data.success) {
+				savedScores = [];
+				updateDataTable();
+				saveLocalScores([]);
+				showMessage('scoreMessage', data.message, 'success');
+			} else {
+				showMessage('scoreMessage', data.message, 'error');
+			}
+		})
+		.catch(err => showMessage('scoreMessage', 'Lỗi: ' + err.message, 'error'));
+	});
+
+	// Ensure UI sections visible even before import; load scores and attempt restore
+	window.addEventListener('load', function() {
+		// Show UI sections so user can view/enter data before importing
+		document.getElementById('scoreSection').style.display = 'block';
+		document.getElementById('dataSection').style.display = 'block';
+		document.getElementById('exportSection').style.display = 'block';
+
+		loadScores().then(() => restoreLocalIfNeeded());
+	});
+</script>
