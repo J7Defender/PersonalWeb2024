@@ -16,6 +16,7 @@ import { publicPaths } from "./config/config.js";
 // Import routes
 import userRoutes from "./routes/userRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
+import toolRoutes from "./routes/toolsRoutes.js";
 
 // Import dotenv
 dotenv.config();
@@ -31,6 +32,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
 // TODO: Try to use flags to enable or disable logging
@@ -51,6 +53,7 @@ app.use(authenticate, (req, res, next) => {
 
 app.use("/", userRoutes);
 app.use("/", noteRoutes);
+app.use("/", toolRoutes);
 
 app.get("/", (req, res) => {
 	return res.render("index", {
