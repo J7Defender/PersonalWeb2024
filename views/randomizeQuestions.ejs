@@ -1,0 +1,185 @@
+<%- include('./partials/head.ejs') %> <%- include('./partials/navBar.ejs') %>
+
+<head>
+  <title><%= title || 'Randomize Questions' %></title>
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+  />
+</head>
+
+<style>
+  .btn1 {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn1:hover {
+    background-color: #0056b3;
+  }
+
+  .pre-container {
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .copy-btn:active {
+    transform: translateY(1px);
+  }
+</style>
+
+<main
+  style="
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+  "
+>
+  <section style="max-width: 900px; width: 100%">
+    <h1><%= title || 'Randomize Questions' %></h1>
+
+    <div
+      style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem"
+    >
+      <label for="groupSize">Group size:</label>
+      <input
+        id="groupSize"
+        type="number"
+        min="1"
+        value="1"
+        style="width: 5rem; padding: 0.25rem"
+      />
+      <button id="randomizeBtn" class="btn1">Randomize & Group</button>
+      <button id="clearBtn" class="btn1">Clear</button>
+    </div>
+
+    <textarea
+      id="questionsInput"
+      rows="14"
+      style="width: 100%; padding: 0.5rem; font-size: 1rem; line-height: 1.4"
+      placeholder="Enter one question per line..."
+    ></textarea>
+
+    <h2 style="margin-top: 1.25rem">Result</h2>
+    <div id="result" style="margin-top: 0.5rem" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function groupArray(items, size) {
+    const groups = [];
+    for (let i = 0; i < items.length; i += size) {
+      groups.push(items.slice(i, i + size));
+    }
+    return groups;
+  }
+
+  document.getElementById("randomizeBtn").addEventListener("click", () => {
+    const raw = document.getElementById("questionsInput").value || "";
+    const lines = raw
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    if (lines.length === 0) {
+      document.getElementById("result").innerHTML =
+        "<em>No questions provided.</em>";
+      return;
+    }
+
+    const groupSizeInput = document.getElementById("groupSize").value;
+    let groupSize = parseInt(groupSizeInput, 10);
+    if (isNaN(groupSize) || groupSize < 1) groupSize = 1;
+
+    shuffleArray(lines);
+    const groups = groupArray(lines, groupSize);
+
+    const out = document.createElement("div");
+    groups.forEach((g, idx) => {
+      const heading = document.createElement("h3");
+      heading.textContent = "Group " + (idx + 1);
+
+      const container = document.createElement("div");
+      container.className = "pre-container";
+
+      const pre = document.createElement("pre");
+      pre.style.whiteSpace = "pre-wrap";
+      pre.style.background = "#f8f8f8";
+      pre.style.padding = "1.25rem 0.5rem 0.5rem 0.5rem";
+      pre.style.border = "1px solid #eee";
+      pre.textContent = g.join("\n");
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "copy-btn";
+      copyBtn.type = "button";
+      copyBtn.textContent = "Copy";
+      copyBtn.addEventListener("click", () => {
+        if (!navigator.clipboard) {
+          // fallback
+          const range = document.createRange();
+          range.selectNodeContents(pre);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          try {
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied!';
+          } catch (e) {
+            copyBtn.textContent = 'Error';
+          }
+          sel.removeAllRanges();
+          setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
+          return;
+        }
+
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = prev), 1500);
+        }).catch(() => {
+          copyBtn.textContent = 'Error';
+          setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
+        });
+      });
+
+      out.appendChild(heading);
+      container.appendChild(copyBtn);
+      container.appendChild(pre);
+      out.appendChild(container);
+    });
+
+    const result = document.getElementById("result");
+    result.innerHTML = "";
+    result.appendChild(out);
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    document.getElementById("questionsInput").value = "";
+    document.getElementById("result").innerHTML = "";
+  });
+</script>

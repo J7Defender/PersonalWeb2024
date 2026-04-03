@@ -55,6 +55,18 @@ router.get("/tools/excel", (req, res) => {
 	});
 });
 
+router.get("/tools/randomize-questions", (req, res) => {
+	if (req.authenticateSuccess === false) {
+		console.log("[toolsRoutes.js] User not authenticated");
+		return res.redirect("/");
+	}
+	return res.render("randomizeQuestions", {
+		title: "Randomize Questions",
+		authenticated: true,
+		userId: req.userId
+	});
+});
+
 // Excel Tool API Routes
 router.post("/api/excel/upload", upload.single('file'), uploadExcel);
 router.post("/api/excel/apply-sheet", applySheet);
@@ -64,5 +76,8 @@ router.post("/api/excel/delete-score", deleteScore);
 router.post("/api/excel/clear-scores", clearScores);
 router.get("/api/excel/export", exportScores);
 router.get("/api/excel/people", getPeople);
+
+// Randomize Questions API Routes
+// TODO: Add routes for randomizing questions
 
 export default router;
