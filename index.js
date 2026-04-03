@@ -26,6 +26,7 @@ import("./config/database.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
+const PORT = 3000;
 
 // Use public directory for css and other assets
 app.use(express.static(__dirname + '/public'));
@@ -69,6 +70,6 @@ app.get("*", (req, res) => {
 	});
 });
 
-app.listen(process.env.PORT, () => {
-	console.log(`Server is running on port ${process.env.PORT}`);
+app.listen(PORT, () => {
+	console.log(`Server is running on port ${PORT}`);
 });
