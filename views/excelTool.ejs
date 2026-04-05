@@ -155,7 +155,7 @@
 
 	.input-row {
 		display: grid;
-		grid-template-columns: 2fr 1fr 1fr;
+		grid-template-columns: 2fr 1fr 1fr 2fr;
 		gap: 1rem;
 	}
 
@@ -278,6 +278,10 @@
 			<div class="form-group">
 				<label for="score2">Điểm 2:</label>
 				<input type="number" id="score2" placeholder="0" step="0.1" class="score-input" />
+			</div>
+			<div class="form-group">
+				<label for="notes">Ghi chú:</label>
+				<input type="text" id="notes" placeholder="Ghi chú / nhận xét" />
 			</div>
 		</div>
 
@@ -519,11 +523,13 @@
 	// Auto-save score on Enter or blur
 	const score1Input = document.getElementById('score1');
 	const score2Input = document.getElementById('score2');
+	const notesInput = document.getElementById('notes');
 
 	function saveCurrentScore() {
 		const person = personInput.value.trim();
 		const score1 = score1Input.value;
 		const score2 = score2Input.value;
+        const notes = notesInput ? notesInput.value : '';
 
 		if (!person) {
 			showMessage('scoreMessage', 'Vui lòng chọn một người', 'error');
@@ -539,7 +545,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ person, score1, score2 })
+ 			body: JSON.stringify({ person, score1, score2, notes })
 		})
 		.then(res => res.json())
 		.then(data => {
@@ -551,6 +557,7 @@
 				personInput.value = '';
 				score1Input.value = '';
 				score2Input.value = '';
+				if (notesInput) notesInput.value = '';
 				suggestionsDiv.classList.remove('show');
 
 				updateDataTable();
@@ -620,17 +627,19 @@
 
 		let html = `
 			<table class="data-table">
-				<thead>
-					<tr>
-						<th>STT</th>
-						<th>Tên</th>
-						<th>Mã SV</th>
-						<th>Ngày Sinh</th>
-						<th>Điểm 1</th>
-						<th>Điểm 2</th>
-						<th>Hành động</th>
-					</tr>
-				</thead>
+	 			<thead>
+	 				<tr>
+	 					<th>STT</th>
+	 					<th>Tên</th>
+	 					<th>Mã SV</th>
+	 					<th>Ngày Sinh</th>
+	 					<th>Điểm 1</th>
+	 					<th>Điểm 2</th>
+	 					<th>Điểm TB</th>
+	 					<th>Ghi chú</th>
+	 					<th>Hành động</th>
+	 				</tr>
+	 			</thead>
 				<tbody>
 		`;
 
@@ -643,6 +652,8 @@
 					<td>${item.dateOfBirth || '-'}</td>
 					<td>${item.score1 !== null ? item.score1 : '-'}</td>
 					<td>${item.score2 !== null ? item.score2 : '-'}</td>
+					<td>${item.average !== null && item.average !== undefined ? item.average : '-'}</td>
+					<td>${item.notes ? item.notes : '-'}</td>
 					<td><button class="btn-danger" onclick="deleteScore(${index})">Xóa</button></td>
 				</tr>
 			`;
@@ -731,7 +742,7 @@
 			return fetch('/api/excel/save-score', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ person: item.person, score1: item.score1, score2: item.score2 })
+				body: JSON.stringify({ person: item.person, score1: item.score1, score2: item.score2, notes: item.notes || '' })
 			}).then(r => r.json()).catch(() => null);
 		});
 

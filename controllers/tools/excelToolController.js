@@ -156,7 +156,7 @@ export const applySheet = (req, res) => {
 
 export const saveScore = (req, res) => {
 	try {
-		const { person, score1, score2 } = req.body;
+		const { person, score1, score2, notes } = req.body;
 		const userId = req.userId;
 
 		// Ensure session storage exists for this user so scores can be saved before importing a sheet
@@ -171,7 +171,7 @@ export const saveScore = (req, res) => {
 		}
 
 		// Check if at least one score is provided
-		if (!score1 && !score2) {
+		if ((score1 === undefined || score1 === null || score1 === '') && (score2 === undefined || score2 === null || score2 === '')) {
 			return res.status(400).json({
 				success: false,
 				message: 'Vui lòng nhập ít nhất một điểm'
@@ -179,7 +179,7 @@ export const saveScore = (req, res) => {
 		}
 
 		// Validate scores if provided
-		if ((score1 && isNaN(score1)) || (score2 && isNaN(score2))) {
+		if ((score1 !== undefined && score1 !== null && score1 !== '' && isNaN(score1)) || (score2 !== undefined && score2 !== null && score2 !== '' && isNaN(score2))) {
 			return res.status(400).json({
 				success: false,
 				message: 'Điểm không hợp lệ'
@@ -206,13 +206,27 @@ export const saveScore = (req, res) => {
 			item => item.person === person
 		);
 
+		const s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseFloat(score1) : null;
+		const s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseFloat(score2) : null;
+
+		let average = null;
+		if (s1 !== null && s2 !== null) {
+			average = +(((s1 + s2) / 2).toFixed(2));
+		} else if (s1 !== null) {
+			average = +(s1.toFixed(2));
+		} else if (s2 !== null) {
+			average = +(s2.toFixed(2));
+		}
+
 		const newEntry = {
 			person,
 			sequenceNum,
 			studentId,
 			dateOfBirth,
-			score1: score1 ? parseFloat(score1) : null,
-			score2: score2 ? parseFloat(score2) : null
+			score1: s1,
+			score2: s2,
+			average,
+			notes: notes ? String(notes) : ''
 		};
 
 		if (existingIndex >= 0) {
@@ -336,18 +350,27 @@ export const exportScores = (req, res) => {
 
 		// Sort scores according to original order from file (by sequence number)
 		const sortedScores = [...sessionData[userId].scores].sort((a, b) => {
-			const seqA = typeof a.sequenceNum === 'string' ? parseInt(a.sequenceNum) : a.sequenceNum;
-			const seqB = typeof b.sequenceNum === 'string' ? parseInt(b.sequenceNum) : b.sequenceNum;
+			const seqAraw = typeof a.sequenceNum === 'string' ? parseInt(a.sequenceNum) : a.sequenceNum;
+			const seqBraw = typeof b.sequenceNum === 'string' ? parseInt(b.sequenceNum) : b.sequenceNum;
+			const seqA = Number.isFinite(seqAraw) ? seqAraw : Infinity;
+			const seqB = Number.isFinite(seqBraw) ? seqBraw : Infinity;
 			return seqA - seqB;
 		});
 
-		// Create workbook
+		// Create workbook including average and notes
 		const ws_data = [
-			['STT', 'Tên', 'Điểm 1', 'Điểm 2']
+			['STT', 'Tên', 'Điểm 1', 'Điểm 2', 'Điểm TB', 'Ghi chú']
 		];
 
 		sortedScores.forEach(item => {
-			ws_data.push([item.sequenceNum, item.person, item.score1, item.score2]);
+			ws_data.push([
+				item.sequenceNum,
+				item.person,
+				(item.score1 !== null && item.score1 !== undefined) ? item.score1 : '',
+				(item.score2 !== null && item.score2 !== undefined) ? item.score2 : '',
+				(item.average !== null && item.average !== undefined) ? item.average : '',
+				item.notes || ''
+			]);
 		});
 
 		const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -359,7 +382,9 @@ export const exportScores = (req, res) => {
 			{ wch: 10 },
 			{ wch: 30 },
 			{ wch: 15 },
-			{ wch: 15 }
+			{ wch: 15 },
+			{ wch: 12 },
+			{ wch: 30 }
 		];
 
 		// Generate file and send
@@ -417,4 +442,4 @@ export const getPeople = (req, res) => {
 	}
 };
 
-// TODO: Add feature to calculate average of the 2 score, display it in table and include it in the exported file. Consider also adding a column for any notes/comments. 
+// Feature: calculate average of score1 and score2, store notes, and include both in exported file.
