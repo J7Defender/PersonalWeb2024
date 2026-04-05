@@ -590,6 +590,13 @@
 		}
 	});
 
+	notesInput.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			saveCurrentScore();
+		}
+	});
+
 	// Clear score handler
 	document.getElementById('clearScoreBtn').addEventListener('click', function() {
 		personInput.value = '';

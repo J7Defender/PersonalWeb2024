@@ -441,5 +441,3 @@ export const getPeople = (req, res) => {
 		});
 	}
 };
-
-// Feature: calculate average of score1 and score2, store notes, and include both in exported file.
