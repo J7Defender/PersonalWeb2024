@@ -89,15 +89,19 @@ export const applySheet = (req, res) => {
 				const row = jsonData[i];
 				if (!row || row.length < 15) continue; // Need at least column P (14)
 
-				// Column B is index 0 (sequence number)
-				// Column I is index 7 (student ID)
-				// Column K is index 9 (last name), Column M is index 11 (first name)
-				// Column P is index 14 (date of birth)
-				const sequenceNum = row[0]; // Column B
-				const studentId = row[7]; // Column I
-				const lastName = row[9]; // Column K
-				const firstName = row[11]; // Column M
-				const dateOfBirth = row[14]; // Column P
+				var firstNotNullIndex = row.findIndex(cell => cell !== null && cell !== undefined && cell !== '');
+				if (firstNotNullIndex === -1) continue; // Skip empty rows
+
+				// Column B is first non-null cell (sequence number)
+				// Column I is index B + 7 (student ID)
+				// Column K is index B + 9 (last name)
+				// Column M is index B + 11 (first name)
+				// Column P is index B + 14 (date of birth)
+				const sequenceNum = row[firstNotNullIndex]; // Column B
+				const studentId = row[firstNotNullIndex + 7]; // Column I
+				const lastName = row[firstNotNullIndex + 9]; // Column K
+				const firstName = row[firstNotNullIndex + 11]; // Column M
+				const dateOfBirth = row[firstNotNullIndex + 14]; // Column P
 
 				// Check if sequence number exists AND student ID has numbers (indicates valid data row)
 				if (sequenceNum && studentId && /\d/.test(studentId.toString()) && (lastName || firstName)) {
@@ -121,6 +125,8 @@ export const applySheet = (req, res) => {
 		}
 
 		const people = originalOrder;
+
+		console.log(`[applySheet] Total valid people extracted: ${people.length}`);
 
 		if (people.length === 0) {
 			return res.status(400).json({
@@ -410,3 +416,5 @@ export const getPeople = (req, res) => {
 		});
 	}
 };
+
+// TODO: Add feature to calculate average of the 2 score, display it in table and include it in the exported file. Consider also adding a column for any notes/comments. 
