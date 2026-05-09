@@ -657,8 +657,8 @@
 					<td>${item.person}</td>
 					<td>${item.studentId || '-'}</td>
 					<td>${item.dateOfBirth || '-'}</td>
-					<td>${item.score1 !== null ? item.score1 : '-'}</td>
-					<td>${item.score2 !== null ? item.score2 : '-'}</td>
+					<td>${item.score1 !== null ? item.score1 : ''}</td>
+					<td>${item.score2 !== null ? item.score2 : ''}</td>
 					<td>${item.average !== null && item.average !== undefined ? item.average : '-'}</td>
 					<td>${item.notes ? item.notes : '-'}</td>
 					<td><button class="btn-danger" onclick="deleteScore(${index})">Xóa</button></td>
