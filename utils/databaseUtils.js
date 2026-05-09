@@ -1,80 +1,28 @@
-import { User } from "../models/userModel.js";
-import { decodeToken } from "../controllers/authController.js";
+// Database utilities are stubbed because the online database is disabled.
 
 const getEmail = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  return decodeToken(accessToken).email;
+  // Token decoding is disabled in offline mode
+  return null;
 };
 
 const getId = (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  return decodeToken(accessToken)._id;
+  return null;
 };
 
 const getUserByToken = async (accessToken) => {
-  if (!accessToken || accessToken === "undefined") {
-    return null;
-  }
-
-  let user;
-  try {
-    user = await User.findById(decodeToken(accessToken)._id);
-  } catch (err) {
-    console.log(err);
-  }
-
-  return user;
+  return null;
 };
 
 const getUserById = async (userId) => {
-  if (!userId || userId === "undefined") {
-    return null;
-  }
-
-  let user;
-  try {
-    user = await User.findById(userId);
-  } catch (err) {
-    console.log(err);
-  }
-
-  return user;
+  return null;
 };
 
 const getUserWithNotes = async (userId) => {
-  if (!userId || userId === "undefined") {
-    return null;
-  }
-
-  let user;
-  try {
-    user = await User.findById(userId).populate("notes").exec();
-  } catch (err) {
-    console.log(err);
-  }
-
-  return user;
+  return null;
 };
 
 const getNoteById = async (userObj, noteId) => {
-  if (!noteId || noteId === "undefined" || !userObj) {
-    return null;
-  }
-
-  let note;
-  try {
-    note = await userObj.notes.find((note) => note._id == noteId);
-  } catch (err) {
-    console.log(err);
-  }
-
-  return note;
+  return null;
 };
 
 export {
@@ -83,5 +31,5 @@ export {
   getUserByToken,
   getUserById,
   getUserWithNotes,
-  getNoteById
+  getNoteById,
 };

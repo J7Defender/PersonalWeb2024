@@ -4,61 +4,32 @@ import {loginUser, registerUser, logoutUser, getProfile, saveProfile} from "../c
 const router = express.Router();
 
 router.get("/signin", (req, res) => {
-    if (req.authenticateSuccess) {
-        console.log("[indexed.js] User already logged in");
-        return res.redirect("/");
-    }
-
-    return res.render("signin", {
-        title: "Sign in"
-    });
+    // Sign in page temporarily disabled
+    return res.redirect("/");
 });
 
-router.post("/signin", loginUser, (req, res) => {
-    console.log("[userRoutes.js] PostLogin");
-    if (req.userExists && req.loginSuccess) {
-        return res.redirect("/list");
-    } else {
-        return res.render("signin", {
-            title: "Sign in",
-        });
-    }
+router.post("/signin", (req, res) => {
+    // Login is temporarily disabled
+    return res.redirect("/");
 });
 
 router.get("/register", (req, res) => {
-    if (req.authenticateSuccess) {
-        console.log("[index.js] User already logged in");
-        return res.redirect("/");
-    }
-
-    return res.render("register", {
-        title: "Register",
-    });
+    // Registration temporarily disabled
+    return res.redirect("/");
 });
 
-router.post("/register", registerUser, (req, res) => {
-    if (req.userExists) {
-        // TODO: Handle if user already exists
-        return res.render("register", {
-            title: "Register",
-            error: "User already exists",
-        });
-    }
-
-    if (req.registerSuccess) {
-        return res.redirect("/signin");
-    } else {
-        return res.render("register", {
-            title: "Register",
-            error: "Registration failed",
-        });
-        // TODO: Handle if user has failed to register
-    }
+router.post("/register", (req, res) => {
+    // Registration is temporarily disabled
+    return res.redirect("/");
 });
 
-router.get("/profile", getProfile);
+router.get("/profile", (req, res) => {
+    // Profile access disabled while DB is offline
+    return res.redirect("/");
+});
 
-router.post("/profile", saveProfile, (req, res) => {
+router.post("/profile", (req, res) => {
+    // Saving profile disabled while DB is offline
     return res.redirect("/");
 });
 

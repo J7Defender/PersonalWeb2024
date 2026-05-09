@@ -5,7 +5,8 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 
-import {authenticate} from "./controllers/authController.js";
+// Authentication temporarily disabled
+// import {authenticate} from "./controllers/authController.js";
 
 import {dirname} from "path";
 import {fileURLToPath} from "url";
@@ -21,8 +22,8 @@ import toolRoutes from "./routes/toolsRoutes.js";
 // Import dotenv
 dotenv.config();
 
-// Connect to MongoDB using Mongoose
-import("./config/database.js");
+// Database connection disabled for offline mode
+// import("./config/database.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -43,17 +44,18 @@ app.get("/favicon.ico", (req, res) => {
 	return res.sendStatus(204);
 });
 
-// Public paths does not require authentication
-app.use(authenticate, (req, res, next) => {
-	if (req.method === "GET" && !req.userId && !publicPaths.includes(req.path)) {
-		return res.redirect("/signin");
-	}
-
-	return next();
-});
+// Authentication middleware temporarily disabled to remove login requirement
+// app.use(authenticate, (req, res, next) => {
+// 	if (req.method === "GET" && !req.userId && !publicPaths.includes(req.path)) {
+// 		return res.redirect("/signin");
+// 	}
+// 
+// 	return next();
+// });
 
 app.use("/", userRoutes);
-app.use("/", noteRoutes);
+// Note routes temporarily disabled
+// app.use("/", noteRoutes);
 app.use("/", toolRoutes);
 
 app.get("/", (req, res) => {
