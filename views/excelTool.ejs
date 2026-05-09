@@ -576,9 +576,13 @@
 	score1Input.addEventListener('keydown', function(e) {
 		if (e.key === 'Tab') {
 			e.preventDefault();
-			score2Input.focus();
-		}
-		if (e.key === 'Enter') {
+			// If Shift+Tab, go back to the person input; otherwise move to score2
+			if (e.shiftKey) {
+				personInput.focus();
+			} else {
+				score2Input.focus();
+			}
+		} else if (e.key === 'Enter') {
 			e.preventDefault();
 			saveCurrentScore();
 		}
