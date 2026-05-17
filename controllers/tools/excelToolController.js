@@ -348,30 +348,55 @@ export const exportScores = (req, res) => {
 			});
 		}
 
-		// Sort scores according to original order from file (by sequence number)
-		const sortedScores = [...sessionData[userId].scores].sort((a, b) => {
-			const seqAraw = typeof a.sequenceNum === 'string' ? parseInt(a.sequenceNum) : a.sequenceNum;
-			const seqBraw = typeof b.sequenceNum === 'string' ? parseInt(b.sequenceNum) : b.sequenceNum;
-			const seqA = Number.isFinite(seqAraw) ? seqAraw : Infinity;
-			const seqB = Number.isFinite(seqBraw) ? seqBraw : Infinity;
-			return seqA - seqB;
-		});
+		// Build export rows while preserving original sheet lines/indexes.
+		// If peopleOrder exists (original import), iterate it to keep blank rows for entries without scores.
+		const peopleOrder = sessionData[userId].peopleOrder || [];
+		const scoreMap = {};
+		(sessionData[userId].scores || []).forEach(s => { scoreMap[s.person] = s; });
 
 		// Create workbook including average and notes
 		const ws_data = [
 			['STT', 'Tên', 'Điểm 1', 'Điểm 2', 'Điểm TB', 'Ghi chú']
 		];
+		if (peopleOrder.length > 0) {
+			for (const p of peopleOrder) {
+				const seq = (p.sequenceNum !== undefined && p.sequenceNum !== null) ? p.sequenceNum : '';
+				const score = scoreMap[p.name];
+				if (score) {
+					ws_data.push([
+						seq,
+						score.person,
+						(score.score1 !== null && score.score1 !== undefined) ? score.score1 : '',
+						(score.score2 !== null && score.score2 !== undefined) ? score.score2 : '',
+						(score.average !== null && score.average !== undefined) ? score.average : '',
+						score.notes || ''
+					]);
+				} else {
+					// Preserve blank line with only the index number when no scores entered for this row
+					ws_data.push([seq, '', '', '', '', '']);
+				}
+			}
+		} else {
+			// Fallback: sort existing scores by sequence number as before
+			const sortedScores = [...sessionData[userId].scores].sort((a, b) => {
+				const seqAraw = typeof a.sequenceNum === 'string' ? parseInt(a.sequenceNum) : a.sequenceNum;
+				const seqBraw = typeof b.sequenceNum === 'string' ? parseInt(b.sequenceNum) : b.sequenceNum;
+				const seqA = Number.isFinite(seqAraw) ? seqAraw : Infinity;
+				const seqB = Number.isFinite(seqBraw) ? seqBraw : Infinity;
+				return seqA - seqB;
+			});
 
-		sortedScores.forEach(item => {
-			ws_data.push([
-				item.sequenceNum,
-				item.person,
-				(item.score1 !== null && item.score1 !== undefined) ? item.score1 : '',
-				(item.score2 !== null && item.score2 !== undefined) ? item.score2 : '',
-				(item.average !== null && item.average !== undefined) ? item.average : '',
-				item.notes || ''
-			]);
-		});
+			sortedScores.forEach(item => {
+				ws_data.push([
+					item.sequenceNum,
+					item.person,
+					(item.score1 !== null && item.score1 !== undefined) ? item.score1 : '',
+					(item.score2 !== null && item.score2 !== undefined) ? item.score2 : '',
+					(item.average !== null && item.average !== undefined) ? item.average : '',
+					item.notes || ''
+				]);
+			});
+		}
 
 		const ws = XLSX.utils.aoa_to_sheet(ws_data);
 		const wb = XLSX.utils.book_new();
