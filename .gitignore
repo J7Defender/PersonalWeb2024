@@ -133,3 +133,6 @@ dist
 templates/
 assets/
 .idea
+
+# Copilot instructions
+copilot-instructions.md
