@@ -218,6 +218,7 @@ export const saveScore = (req, res) => {
 			average = +(s2.toFixed(2));
 		}
 
+		const incomingNotes = (notes !== undefined && notes !== null) ? String(notes) : '';
 		const newEntry = {
 			person,
 			sequenceNum,
@@ -226,12 +227,19 @@ export const saveScore = (req, res) => {
 			score1: s1,
 			score2: s2,
 			average,
-			notes: notes ? String(notes) : ''
+			notes: '' // will set below
 		};
 
 		if (existingIndex >= 0) {
+			const existingNotes = sessionData[userId].scores[existingIndex].notes || '';
+			if (incomingNotes) {
+				newEntry.notes = incomingNotes + (existingNotes ? ' | ' + existingNotes : '');
+			} else {
+				newEntry.notes = existingNotes;
+			}
 			sessionData[userId].scores[existingIndex] = newEntry;
 		} else {
+			newEntry.notes = incomingNotes;
 			sessionData[userId].scores.push(newEntry);
 		}
 
@@ -372,8 +380,8 @@ export const exportScores = (req, res) => {
 						score.notes || ''
 					]);
 				} else {
-					// Preserve blank line with only the index number when no scores entered for this row
-					ws_data.push([seq, '', '', '', '', '']);
+					// Preserve row with sequence number and name even when no scores entered
+					ws_data.push([seq, p.name, '', '', '', '']);
 				}
 			}
 		} else {
