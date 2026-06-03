@@ -234,6 +234,12 @@
 		color: #666;
 		padding: 2rem;
 	}
+
+	.count-info {
+		margin-bottom: 0.75rem;
+		color: #555;
+		font-weight: 600;
+	}
 </style>
 
 <div class="excel-container">
@@ -313,6 +319,7 @@
 	<!-- Data Display Section -->
 	<div class="section" id="dataSection" style="display: none;">
 		<h2>3. Dữ Liệu Đã Lưu</h2>
+		<div id="enteredCount" class="count-info">Đã nhập: 0 người</div>
 		<div id="dataContainer">
 			<div class="empty-message">Chưa có dữ liệu</div>
 		</div>
@@ -334,6 +341,7 @@
 	let savedScores = [];
 	let filteredPeople = [];
 	let selectedIndex = -1;
+	let prefilledFromSaved = false;
 
 	// File import handler
 	document.getElementById('excelFile').addEventListener('change', handleFileSelect);
@@ -418,7 +426,9 @@
 	const suggestionsDiv = document.getElementById('suggestions');
 
 	personInput.addEventListener('input', function(e) {
-		const value = this.value.toLowerCase();
+		const rawValue = this.value;
+		const value = rawValue.toLowerCase();
+		handlePersonTyping(rawValue);
 		selectedIndex = -1;
 
 		if (!value) {
@@ -445,18 +455,34 @@
 		document.querySelectorAll('.suggestion-item').forEach(item => {
 			item.addEventListener('click', function() {
 				const selectedName = this.textContent;
-				personInput.value = selectedName;
-				suggestionsDiv.classList.remove('show');
-				selectedIndex = -1;
-				filteredPeople = [];
-				showPersonInfo(selectedName);
+				selectPerson(selectedName);
 			});
 		});
 	});
 
 	// Function to display person information
+	function normalizeName(value) {
+		return (value || '').toString().trim().toLowerCase();
+	}
+
+	function findPersonByName(personName) {
+		const target = normalizeName(personName);
+		return importedData.people.find(p => normalizeName(p.name) === target);
+	}
+
+	function findSavedScoreByName(personName) {
+		const target = normalizeName(personName);
+		return savedScores.find(s => normalizeName(s.person) === target);
+	}
+
+	function clearScoreInputs() {
+		score1Input.value = '';
+		score2Input.value = '';
+		if (notesInput) notesInput.value = '';
+	}
+
 	function showPersonInfo(personName) {
-		const personData = importedData.people.find(p => p.name === personName);
+		const personData = findPersonByName(personName);
 		if (personData) {
 			document.getElementById('infSequenceNum').textContent = personData.sequenceNum || '-';
 			document.getElementById('infStudentId').textContent = personData.studentId || '-';
@@ -465,6 +491,47 @@
 		} else {
 			document.getElementById('personInfoSection').style.display = 'none';
 		}
+	}
+
+	function applySavedScores(personName, clearWhenMissing) {
+		const saved = findSavedScoreByName(personName);
+		if (saved) {
+			score1Input.value = (saved.score1 !== null && saved.score1 !== undefined) ? saved.score1 : '';
+			score2Input.value = (saved.score2 !== null && saved.score2 !== undefined) ? saved.score2 : '';
+			if (notesInput) notesInput.value = saved.notes || '';
+			prefilledFromSaved = true;
+			return true;
+		}
+		if (clearWhenMissing) {
+			clearScoreInputs();
+		} else if (prefilledFromSaved) {
+			clearScoreInputs();
+		}
+		prefilledFromSaved = false;
+		return false;
+	}
+
+	function handlePersonTyping(personName) {
+		const trimmed = (personName || '').trim();
+		if (!trimmed) {
+			document.getElementById('personInfoSection').style.display = 'none';
+			clearScoreInputs();
+			prefilledFromSaved = false;
+			return;
+		}
+
+		showPersonInfo(trimmed);
+		applySavedScores(trimmed, false);
+	}
+
+	function selectPerson(personName) {
+		const trimmed = (personName || '').trim();
+		personInput.value = trimmed;
+		suggestionsDiv.classList.remove('show');
+		selectedIndex = -1;
+		filteredPeople = [];
+		showPersonInfo(trimmed);
+		applySavedScores(trimmed, true);
 	}
 
 	// Keyboard navigation for suggestions
@@ -496,11 +563,7 @@
 			e.preventDefault();
 			if (selectedIndex >= 0) {
 				const selectedPerson = filteredPeople[selectedIndex];
-				personInput.value = selectedPerson.name;
-				suggestionsDiv.classList.remove('show');
-				selectedIndex = -1;
-				filteredPeople = [];
-				showPersonInfo(selectedPerson.name);
+				selectPerson(selectedPerson.name);
 				// Focus on score1 input
 				score1Input.focus();
 			}
@@ -551,13 +614,16 @@
 		.then(data => {
 			if (data.success) {
 				savedScores = data.scores;
-				showMessage('scoreMessage', `✓ Đã lưu ${person}`, 'success');
+				const score1Text = (score1 !== undefined && score1 !== null && score1 !== '') ? score1 : '';
+				const score2Text = (score2 !== undefined && score2 !== null && score2 !== '') ? score2 : '';
+				const notesText = (notes !== undefined && notes !== null) ? notes : '';
+				showMessage('scoreMessage', `✓ Đã lưu ${person} / ${score1Text} / ${score2Text} / ${notesText}`, 'success');
 				
 				// Clear inputs
 				personInput.value = '';
-				score1Input.value = '';
-				score2Input.value = '';
-				if (notesInput) notesInput.value = '';
+				clearScoreInputs();
+				document.getElementById('personInfoSection').style.display = 'none';
+				prefilledFromSaved = false;
 				personInput.focus();
 				suggestionsDiv.classList.remove('show');
 
@@ -605,9 +671,10 @@
 	// Clear score handler
 	document.getElementById('clearScoreBtn').addEventListener('click', function() {
 		personInput.value = '';
-		score1Input.value = '';
-		score2Input.value = '';
+		clearScoreInputs();
 		suggestionsDiv.classList.remove('show');
+		document.getElementById('personInfoSection').style.display = 'none';
+		prefilledFromSaved = false;
 		showMessage('scoreMessage', '', '');
 	});
 
@@ -631,6 +698,11 @@
 	// Update data table
 	function updateDataTable() {
 		const container = document.getElementById('dataContainer');
+		const countElement = document.getElementById('enteredCount');
+
+		if (countElement) {
+			countElement.textContent = `Đã nhập: ${savedScores.length} người`;
+		}
 		
 		if (savedScores.length === 0) {
 			container.innerHTML = '<div class="empty-message">Chưa có dữ liệu</div>';
@@ -655,7 +727,10 @@
 				<tbody>
 		`;
 
-		savedScores.forEach((item, index) => {
+		for (let displayIndex = 0; displayIndex < savedScores.length; displayIndex++) {
+			const originalIndex = savedScores.length - 1 - displayIndex;
+			const item = savedScores[originalIndex];
+			const notesText = (item.notes !== undefined && item.notes !== null) ? item.notes : '';
 			html += `
 				<tr>
 					<td>${item.sequenceNum || '-'}</td>
@@ -665,11 +740,11 @@
 					<td>${item.score1 !== null ? item.score1 : ''}</td>
 					<td>${item.score2 !== null ? item.score2 : ''}</td>
 					<td>${item.average !== null && item.average !== undefined ? item.average : '-'}</td>
-					<td>${item.notes ? item.notes : '-'}</td>
-					<td><button class="btn-danger" onclick="deleteScore(${index})">Xóa</button></td>
+					<td>${notesText}</td>
+					<td><button class="btn-danger" onclick="deleteScore(${originalIndex})">Xóa</button></td>
 				</tr>
 			`;
-		});
+		}
 
 		html += '</tbody></table>';
 		container.innerHTML = html;
