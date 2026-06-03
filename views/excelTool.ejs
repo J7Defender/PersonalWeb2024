@@ -319,7 +319,10 @@
 	<!-- Data Display Section -->
 	<div class="section" id="dataSection" style="display: none;">
 		<h2>3. Dữ Liệu Đã Lưu</h2>
-		<div id="enteredCount" class="count-info">Đã nhập: 0 người</div>
+		<div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:0.5rem;">
+			<div id="enteredCount" class="count-info">Đã nhập: 0 người</div>
+			<div><button id="sortToggleBtn" class="btn-primary">Sắp xếp theo STT</button></div>
+		</div>
 		<div id="dataContainer">
 			<div class="empty-message">Chưa có dữ liệu</div>
 		</div>
@@ -342,6 +345,7 @@
 	let filteredPeople = [];
 	let selectedIndex = -1;
 	let prefilledFromSaved = false;
+	let displayMode = 'newest'; // 'newest' or 'sequence'
 
 	// File import handler
 	document.getElementById('excelFile').addEventListener('change', handleFileSelect);
@@ -588,19 +592,40 @@
 	const score2Input = document.getElementById('score2');
 	const notesInput = document.getElementById('notes');
 
+	function parseScoreInputValue(val) {
+		const s = (val === undefined || val === null) ? '' : String(val).trim();
+		const m = s.match(/^(-?\d+(?:\.\d+)?)(?:\s*([+-]))?$/);
+		if (m) return { num: m[1], sign: m[2] || '' };
+		return { num: s, sign: '' };
+	}
+
 	function saveCurrentScore() {
 		const person = personInput.value.trim();
-		const score1 = score1Input.value;
-		const score2 = score2Input.value;
-        const notes = notesInput ? notesInput.value : '';
+		const rawScore1 = score1Input.value;
+		const rawScore2 = score2Input.value;
+		const notesRaw = notesInput ? (notesInput.value || '').trim() : '';
 
 		if (!person) {
 			showMessage('scoreMessage', 'Vui lòng chọn một người', 'error');
 			return;
 		}
 
-		if (!score1 && !score2) {
+		if ((!rawScore1 || rawScore1 === '') && (!rawScore2 || rawScore2 === '')) {
 			return; // No scores to save
+		}
+
+		const p1 = parseScoreInputValue(rawScore1);
+		const p2 = parseScoreInputValue(rawScore2);
+
+		const score1ToSend = p1.num !== undefined && p1.num !== null ? p1.num : '';
+		const score2ToSend = p2.num !== undefined && p2.num !== null ? p2.num : '';
+
+		let signPrefix = '';
+		if (p1.sign) signPrefix += p1.sign;
+		if (p2.sign) signPrefix += p2.sign;
+		let noteToSend = notesRaw || '';
+		if (signPrefix) {
+			noteToSend = signPrefix + noteToSend;
 		}
 
 		fetch('/api/excel/save-score', {
@@ -608,17 +633,17 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
- 			body: JSON.stringify({ person, score1, score2, notes })
+			body: JSON.stringify({ person, score1: score1ToSend, score2: score2ToSend, notes: noteToSend })
 		})
 		.then(res => res.json())
 		.then(data => {
 			if (data.success) {
 				savedScores = data.scores;
-				const score1Text = (score1 !== undefined && score1 !== null && score1 !== '') ? score1 : '';
-				const score2Text = (score2 !== undefined && score2 !== null && score2 !== '') ? score2 : '';
-				const notesText = (notes !== undefined && notes !== null) ? notes : '';
-				showMessage('scoreMessage', `✓ Đã lưu ${person} / ${score1Text} / ${score2Text} / ${notesText}`, 'success');
-				
+				const s1Text = score1ToSend !== '' ? score1ToSend : '';
+				const s2Text = score2ToSend !== '' ? score2ToSend : '';
+				const notesText = noteToSend !== undefined && noteToSend !== null ? noteToSend : '';
+				showMessage('scoreMessage', `✓ Đã lưu ${person} / ${s1Text} / ${s2Text} / ${notesText}`, 'success');
+
 				// Clear inputs
 				personInput.value = '';
 				clearScoreInputs();
@@ -628,7 +653,7 @@
 				suggestionsDiv.classList.remove('show');
 
 				updateDataTable();
-					saveLocalScores(savedScores);
+				saveLocalScores(savedScores);
 			} else {
 				showMessage('scoreMessage', data.message, 'error');
 			}
@@ -696,21 +721,47 @@
 	}
 
 	// Update data table
+	function getDisplayRows() {
+		const rows = [];
+		if (displayMode === 'newest') {
+				for (let i = savedScores.length - 1; i >= 0; i--) {
+					rows.push({ item: savedScores[i], originalIndex: i });
+				}
+		} else {
+				const indexed = savedScores.map((it, idx) => ({ it, idx }));
+				indexed.sort((a, b) => {
+					const seqAraw = typeof a.it.sequenceNum === 'string' ? parseInt(a.it.sequenceNum) : a.it.sequenceNum;
+					const seqBraw = typeof b.it.sequenceNum === 'string' ? parseInt(b.it.sequenceNum) : b.it.sequenceNum;
+					const seqA = Number.isFinite(seqAraw) ? seqAraw : Infinity;
+					const seqB = Number.isFinite(seqBraw) ? seqBraw : Infinity;
+					return seqA - seqB;
+				});
+				indexed.forEach(x => rows.push({ item: x.it, originalIndex: x.idx }));
+		}
+		return rows;
+	}
+
 	function updateDataTable() {
 		const container = document.getElementById('dataContainer');
 		const countElement = document.getElementById('enteredCount');
+		const sortBtn = document.getElementById('sortToggleBtn');
 
 		if (countElement) {
-			countElement.textContent = `Đã nhập: ${savedScores.length} người`;
+				countElement.textContent = `Đã nhập: ${savedScores.length} người`;
+		}
+		if (sortBtn) {
+				sortBtn.textContent = displayMode === 'newest' ? 'Sắp xếp theo STT' : 'Mới nhất lên đầu';
 		}
 		
 		if (savedScores.length === 0) {
-			container.innerHTML = '<div class="empty-message">Chưa có dữ liệu</div>';
-			return;
+				container.innerHTML = '<div class="empty-message">Chưa có dữ liệu</div>';
+				return;
 		}
 
+		const rows = getDisplayRows();
+
 		let html = `
-			<table class="data-table">
+				<table class="data-table">
 	 			<thead>
 	 				<tr>
 	 					<th>STT</th>
@@ -727,24 +778,24 @@
 				<tbody>
 		`;
 
-		for (let displayIndex = 0; displayIndex < savedScores.length; displayIndex++) {
-			const originalIndex = savedScores.length - 1 - displayIndex;
-			const item = savedScores[originalIndex];
-			const notesText = (item.notes !== undefined && item.notes !== null) ? item.notes : '';
-			html += `
-				<tr>
-					<td>${item.sequenceNum || '-'}</td>
-					<td>${item.person}</td>
-					<td>${item.studentId || '-'}</td>
-					<td>${item.dateOfBirth || '-'}</td>
-					<td>${item.score1 !== null ? item.score1 : ''}</td>
-					<td>${item.score2 !== null ? item.score2 : ''}</td>
-					<td>${item.average !== null && item.average !== undefined ? item.average : '-'}</td>
-					<td>${notesText}</td>
-					<td><button class="btn-danger" onclick="deleteScore(${originalIndex})">Xóa</button></td>
-				</tr>
-			`;
-		}
+		rows.forEach(rowObj => {
+				const item = rowObj.item;
+				const index = rowObj.originalIndex;
+				const notesText = (item.notes !== undefined && item.notes !== null) ? item.notes : '';
+				html += `
+					<tr>
+						<td>${item.sequenceNum || '-'}</td>
+						<td>${item.person}</td>
+						<td>${item.studentId || '-'}</td>
+						<td>${item.dateOfBirth || '-'}</td>
+						<td>${item.score1 !== null ? item.score1 : ''}</td>
+						<td>${item.score2 !== null ? item.score2 : ''}</td>
+						<td>${item.average !== null && item.average !== undefined ? item.average : '-'}</td>
+						<td>${notesText}</td>
+						<td><button class="btn-danger" onclick="deleteScore(${index})">Xóa</button></td>
+					</tr>
+				`;
+		});
 
 		html += '</tbody></table>';
 		container.innerHTML = html;
@@ -864,6 +915,14 @@
 		document.getElementById('dataSection').style.display = 'block';
 		document.getElementById('exportSection').style.display = 'block';
 
-		loadScores().then(() => restoreLocalIfNeeded());
+		loadScores().then(() => restoreLocalIfNeeded()).then(() => {
+			const sortBtn = document.getElementById('sortToggleBtn');
+			if (sortBtn) {
+				sortBtn.addEventListener('click', function() {
+					displayMode = displayMode === 'newest' ? 'sequence' : 'newest';
+					updateDataTable();
+				});
+			}
+		});
 	});
 </script>
