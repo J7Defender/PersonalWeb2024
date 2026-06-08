@@ -344,6 +344,7 @@
 	let savedScores = [];
 	let filteredPeople = [];
 	let selectedIndex = -1;
+	let selectedPersonData = null;
 	let prefilledFromSaved = false;
 	let displayMode = 'newest'; // 'newest' or 'sequence'
 
@@ -437,31 +438,22 @@
 
 		if (!value) {
 			suggestionsDiv.classList.remove('show');
+			filteredPeople = [];
 			return;
 		}
 
-		filteredPeople = importedData.people.filter(item => 
-			item.name.toLowerCase().includes(value)
-		);
-
-		if (filteredPeople.length === 0) {
-			suggestionsDiv.classList.remove('show');
-			return;
+		const matches = findPeopleBySearch(rawValue);
+		renderSuggestions(matches);
+		if (selectedPersonData) {
+			const highlightedIndex = matches.findIndex(item => normalizeStudentId(item.studentId) === normalizeStudentId(selectedPersonData.studentId));
+			selectedIndex = highlightedIndex >= 0 ? highlightedIndex : -1;
+			if (selectedIndex >= 0) {
+				updateSuggestionSelection();
+			}
+		} else if (matches.length === 1) {
+			selectedIndex = 0;
+			updateSuggestionSelection();
 		}
-
-		suggestionsDiv.innerHTML = filteredPeople
-			.map((item, index) => `<div class="suggestion-item" data-index="${index}">${item.name}</div>`)
-			.join('');
-
-		suggestionsDiv.classList.add('show');
-
-		// Add click handlers
-		document.querySelectorAll('.suggestion-item').forEach(item => {
-			item.addEventListener('click', function() {
-				const selectedName = this.textContent;
-				selectPerson(selectedName);
-			});
-		});
 	});
 
 	// Function to display person information
@@ -469,14 +461,96 @@
 		return (value || '').toString().trim().toLowerCase();
 	}
 
-	function findPersonByName(personName) {
-		const target = normalizeName(personName);
-		return importedData.people.find(p => normalizeName(p.name) === target);
+	function normalizeStudentId(value) {
+		return (value || '').toString().trim().toLowerCase();
 	}
 
-	function findSavedScoreByName(personName) {
+	function findPeopleByName(personName) {
 		const target = normalizeName(personName);
-		return savedScores.find(s => normalizeName(s.person) === target);
+		return importedData.people.filter(p => normalizeName(p.name) === target);
+	}
+
+	function findPeopleBySearch(value) {
+		const target = normalizeName(value);
+		return importedData.people.filter(item => normalizeName(item.name).includes(target));
+	}
+
+	function findPersonByStudentId(studentId) {
+		const target = normalizeStudentId(studentId);
+		if (!target) return null;
+		return importedData.people.find(p => normalizeStudentId(p.studentId) === target) || null;
+	}
+
+	function findSavedScoreForPerson(personData) {
+		if (!personData) return null;
+		const studentId = normalizeStudentId(personData.studentId);
+		if (studentId) {
+			const byId = savedScores.find(s => normalizeStudentId(s.studentId) === studentId);
+			if (byId) return byId;
+		}
+		const personName = normalizeName(personData.name);
+		const matches = savedScores.filter(s => normalizeName(s.person) === personName);
+		return matches.length === 1 ? matches[0] : null;
+	}
+
+	function renderSuggestions(people) {
+		filteredPeople = Array.isArray(people) ? people : [];
+		if (filteredPeople.length === 0) {
+			suggestionsDiv.classList.remove('show');
+			selectedIndex = -1;
+			return;
+		}
+
+		suggestionsDiv.innerHTML = filteredPeople
+			.map((item, index) => {
+				const studentIdText = item.studentId ? ` - MSV: ${item.studentId}` : '';
+				return `<div class="suggestion-item" data-index="${index}">${item.name}${studentIdText}</div>`;
+			})
+			.join('');
+
+		suggestionsDiv.classList.add('show');
+
+		document.querySelectorAll('.suggestion-item').forEach(item => {
+			item.addEventListener('click', function() {
+				const selected = filteredPeople[Number(this.dataset.index)];
+				if (selected) {
+					selectPerson(selected);
+				}
+			});
+		});
+	}
+
+	function selectPerson(personData) {
+		const trimmedName = personData && personData.name ? personData.name.toString().trim() : '';
+		if (!trimmedName) return;
+
+		selectedPersonData = personData;
+		personInput.value = trimmedName;
+		suggestionsDiv.classList.remove('show');
+		selectedIndex = -1;
+		filteredPeople = [];
+		showPersonInfo(personData);
+		applySavedScores(personData, true);
+	}
+
+	function resolvePersonFromInput(rawValue) {
+		const trimmed = (rawValue || '').trim();
+		if (!trimmed) return null;
+
+		const exactMatches = findPeopleByName(trimmed);
+		if (exactMatches.length === 1) {
+			return exactMatches[0];
+		}
+
+		if (selectedPersonData) {
+			const selectedName = normalizeName(selectedPersonData.name);
+			const selectedStudentId = normalizeStudentId(selectedPersonData.studentId);
+			if (selectedName === normalizeName(trimmed) || selectedStudentId === normalizeStudentId(trimmed)) {
+				return selectedPersonData;
+			}
+		}
+
+		return null;
 	}
 
 	function clearScoreInputs() {
@@ -485,20 +559,20 @@
 		if (notesInput) notesInput.value = '';
 	}
 
-	function showPersonInfo(personName) {
-		const personData = findPersonByName(personName);
+	function showPersonInfo(personData) {
 		if (personData) {
 			document.getElementById('infSequenceNum').textContent = personData.sequenceNum || '-';
 			document.getElementById('infStudentId').textContent = personData.studentId || '-';
 			document.getElementById('infDateOfBirth').textContent = personData.dateOfBirth || '-';
 			document.getElementById('personInfoSection').style.display = 'block';
-		} else {
-			document.getElementById('personInfoSection').style.display = 'none';
+			return;
 		}
+
+		document.getElementById('personInfoSection').style.display = 'none';
 	}
 
-	function applySavedScores(personName, clearWhenMissing) {
-		const saved = findSavedScoreByName(personName);
+	function applySavedScores(personData, clearWhenMissing) {
+		const saved = findSavedScoreForPerson(personData);
 		if (saved) {
 			score1Input.value = (saved.score1 !== null && saved.score1 !== undefined) ? saved.score1 : '';
 			score2Input.value = (saved.score2 !== null && saved.score2 !== undefined) ? saved.score2 : '';
@@ -521,21 +595,20 @@
 			document.getElementById('personInfoSection').style.display = 'none';
 			clearScoreInputs();
 			prefilledFromSaved = false;
+			selectedPersonData = null;
 			return;
 		}
 
-		showPersonInfo(trimmed);
-		applySavedScores(trimmed, false);
-	}
-
-	function selectPerson(personName) {
-		const trimmed = (personName || '').trim();
-		personInput.value = trimmed;
-		suggestionsDiv.classList.remove('show');
-		selectedIndex = -1;
-		filteredPeople = [];
-		showPersonInfo(trimmed);
-		applySavedScores(trimmed, true);
+		const resolved = resolvePersonFromInput(trimmed);
+		if (resolved) {
+			selectedPersonData = resolved;
+			showPersonInfo(resolved);
+			applySavedScores(resolved, false);
+		} else {
+			selectedPersonData = null;
+			showPersonInfo(null);
+			applySavedScores(null, false);
+		}
 	}
 
 	// Keyboard navigation for suggestions
@@ -543,14 +616,20 @@
 		if (!suggestionsDiv.classList.contains('show')) {
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				// Show all people
-				filteredPeople = importedData.people;
-				suggestionsDiv.innerHTML = filteredPeople
-					.map((item, index) => `<div class="suggestion-item" data-index="${index}">${item.name}</div>`)
-					.join('');
-				suggestionsDiv.classList.add('show');
-				selectedIndex = 0;
-				updateSuggestionSelection();
+				const typedValue = personInput.value.trim();
+				const exactMatches = findPeopleByName(typedValue);
+				if (exactMatches.length === 1) {
+					selectPerson(exactMatches[0]);
+					score1Input.focus();
+					return;
+				}
+
+				const matches = exactMatches.length > 1 ? exactMatches : findPeopleBySearch(typedValue);
+				if (matches.length > 0) {
+					renderSuggestions(matches);
+					selectedIndex = 0;
+					updateSuggestionSelection();
+				}
 			}
 			return;
 		}
@@ -565,9 +644,14 @@
 			updateSuggestionSelection();
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
+			if (selectedIndex < 0 && filteredPeople.length === 1) {
+				selectPerson(filteredPeople[0]);
+				score1Input.focus();
+				return;
+			}
 			if (selectedIndex >= 0) {
 				const selectedPerson = filteredPeople[selectedIndex];
-				selectPerson(selectedPerson.name);
+				selectPerson(selectedPerson);
 				// Focus on score1 input
 				score1Input.focus();
 			}
@@ -601,12 +685,34 @@
 
 	function saveCurrentScore() {
 		const person = personInput.value.trim();
+		let personData = selectedPersonData || resolvePersonFromInput(person);
 		const rawScore1 = score1Input.value;
 		const rawScore2 = score2Input.value;
 		const notesRaw = notesInput ? (notesInput.value || '').trim() : '';
 
 		if (!person) {
 			showMessage('scoreMessage', 'Vui lòng chọn một người', 'error');
+			return;
+		}
+
+		if (!personData) {
+			const exactMatches = findPeopleByName(person);
+			if (exactMatches.length === 1) {
+				personData = exactMatches[0];
+				selectedPersonData = personData;
+				showPersonInfo(personData);
+				applySavedScores(personData, false);
+			} else if (exactMatches.length > 1) {
+				renderSuggestions(exactMatches);
+				selectedIndex = 0;
+				updateSuggestionSelection();
+				showMessage('scoreMessage', 'Có nhiều sinh viên cùng tên, hãy chọn MSV trong danh sách', 'error');
+				return;
+			}
+		}
+
+		if (!personData) {
+			showMessage('scoreMessage', 'Vui lòng chọn sinh viên từ danh sách', 'error');
 			return;
 		}
 
@@ -633,7 +739,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ person, score1: score1ToSend, score2: score2ToSend, notes: noteToSend })
+			body: JSON.stringify({ person: personData.name, studentId: personData.studentId, score1: score1ToSend, score2: score2ToSend, notes: noteToSend })
 		})
 		.then(res => res.json())
 		.then(data => {
@@ -649,8 +755,10 @@
 				clearScoreInputs();
 				document.getElementById('personInfoSection').style.display = 'none';
 				prefilledFromSaved = false;
+				selectedPersonData = null;
 				personInput.focus();
 				suggestionsDiv.classList.remove('show');
+				filteredPeople = [];
 
 				updateDataTable();
 				saveLocalScores(savedScores);
@@ -700,6 +808,8 @@
 		suggestionsDiv.classList.remove('show');
 		document.getElementById('personInfoSection').style.display = 'none';
 		prefilledFromSaved = false;
+		selectedPersonData = null;
+		filteredPeople = [];
 		showMessage('scoreMessage', '', '');
 	});
 
@@ -880,7 +990,7 @@
 			return fetch('/api/excel/save-score', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ person: item.person, score1: item.score1, score2: item.score2, notes: item.notes || '' })
+				body: JSON.stringify({ person: item.person, studentId: item.studentId, score1: item.score1, score2: item.score2, notes: item.notes || '' })
 			}).then(r => r.json()).catch(() => null);
 		});
 

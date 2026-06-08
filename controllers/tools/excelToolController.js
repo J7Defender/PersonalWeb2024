@@ -69,7 +69,6 @@ export const applySheet = (req, res) => {
 
 		// Process all sheets except the last one
 		const sheetsToProcess = sheetNames.slice(0, -1);
-		const peopleMap = new Map(); // Use Map to maintain order and avoid duplicates
 		const originalOrder = [];
 
 		for (let sheetIndex = 0; sheetIndex < sheetsToProcess.length; sheetIndex++) {
@@ -111,8 +110,7 @@ export const applySheet = (req, res) => {
 					const studentIdStr = studentId.toString().trim();
 					const dobStr = dateOfBirth ? dateOfBirth.toString().trim() : '';
 
-					if (fullName && !peopleMap.has(fullName)) {
-						peopleMap.set(fullName, true);
+					if (fullName) {
 						originalOrder.push({
 							name: fullName,
 							sequenceNum: sequenceNum,
@@ -156,7 +154,7 @@ export const applySheet = (req, res) => {
 
 export const saveScore = (req, res) => {
 	try {
-		const { person, score1, score2, notes } = req.body;
+		const { person, studentId, score1, score2, notes } = req.body;
 		const userId = req.userId;
 
 		// Ensure session storage exists for this user so scores can be saved before importing a sheet
@@ -189,22 +187,31 @@ export const saveScore = (req, res) => {
 
 		// Try to enrich with imported person data if available
 		let sequenceNum = null;
-		let studentId = null;
+		let resolvedStudentId = studentId ? String(studentId).trim() : null;
 		let dateOfBirth = null;
 		if (sessionData[userId].people && Array.isArray(sessionData[userId].people)) {
 			const peopleList = sessionData[userId].people;
-			const personData = peopleList.find(p => p.name === person);
+			let personData = null;
+			if (resolvedStudentId) {
+				personData = peopleList.find(p => p.studentId === resolvedStudentId);
+			}
+			if (!personData && person) {
+				personData = peopleList.find(p => p.name === person);
+			}
 			if (personData) {
 				sequenceNum = personData.sequenceNum;
-				studentId = personData.studentId;
+				resolvedStudentId = personData.studentId;
 				dateOfBirth = personData.dateOfBirth;
 			}
 		}
 
 		// Check if person already exists, update if yes
-		const existingIndex = sessionData[userId].scores.findIndex(
-			item => item.person === person
-		);
+		const existingIndex = sessionData[userId].scores.findIndex(item => {
+			if (resolvedStudentId) {
+				return item.studentId === resolvedStudentId;
+			}
+			return item.person === person;
+		});
 
 		const s1 = (score1 !== undefined && score1 !== null && score1 !== '') ? parseFloat(score1) : null;
 		const s2 = (score2 !== undefined && score2 !== null && score2 !== '') ? parseFloat(score2) : null;
@@ -222,7 +229,7 @@ export const saveScore = (req, res) => {
 		const newEntry = {
 			person,
 			sequenceNum,
-			studentId,
+			studentId: resolvedStudentId,
 			dateOfBirth,
 			score1: s1,
 			score2: s2,
@@ -245,7 +252,7 @@ export const saveScore = (req, res) => {
 
 		return res.json({
 			success: true,
-			message: `Đã lưu điểm cho ${person}`,
+			message: resolvedStudentId ? `Đã lưu điểm cho ${person} (${resolvedStudentId})` : `Đã lưu điểm cho ${person}`,
 			scores: sessionData[userId].scores
 		});
 	} catch (error) {
@@ -359,21 +366,30 @@ export const exportScores = (req, res) => {
 		// Build export rows while preserving original sheet lines/indexes.
 		// If peopleOrder exists (original import), iterate it to keep blank rows for entries without scores.
 		const peopleOrder = sessionData[userId].peopleOrder || [];
-		const scoreMap = {};
-		(sessionData[userId].scores || []).forEach(s => { scoreMap[s.person] = s; });
+		const scoreMapByStudentId = {};
+		const scoreMapByName = {};
+		(sessionData[userId].scores || []).forEach(s => {
+			if (s.studentId) {
+				scoreMapByStudentId[s.studentId] = s;
+			}
+			if (s.person && !scoreMapByName[s.person]) {
+				scoreMapByName[s.person] = s;
+			}
+		});
 
 		// Create workbook including average and notes
 		const ws_data = [
-			['STT', 'Tên', 'Điểm 1', 'Điểm 2', 'Điểm TB', 'Ghi chú']
+			['STT', 'Tên', 'MSV', 'Điểm 1', 'Điểm 2', 'Điểm TB', 'Ghi chú']
 		];
 		if (peopleOrder.length > 0) {
 			for (const p of peopleOrder) {
 				const seq = (p.sequenceNum !== undefined && p.sequenceNum !== null) ? p.sequenceNum : '';
-				const score = scoreMap[p.name];
+				const score = (p.studentId && scoreMapByStudentId[p.studentId]) || scoreMapByName[p.name];
 				if (score) {
 					ws_data.push([
 						seq,
 						score.person,
+						score.studentId || p.studentId || '',
 						(score.score1 !== null && score.score1 !== undefined) ? score.score1 : '',
 						(score.score2 !== null && score.score2 !== undefined) ? score.score2 : '',
 						(score.average !== null && score.average !== undefined) ? score.average : '',
@@ -381,7 +397,7 @@ export const exportScores = (req, res) => {
 					]);
 				} else {
 					// Preserve row with sequence number and name even when no scores entered
-					ws_data.push([seq, p.name, '', '', '', '']);
+					ws_data.push([seq, p.name, p.studentId || '', '', '', '', '']);
 				}
 			}
 		} else {
@@ -398,6 +414,7 @@ export const exportScores = (req, res) => {
 				ws_data.push([
 					item.sequenceNum,
 					item.person,
+					item.studentId || '',
 					(item.score1 !== null && item.score1 !== undefined) ? item.score1 : '',
 					(item.score2 !== null && item.score2 !== undefined) ? item.score2 : '',
 					(item.average !== null && item.average !== undefined) ? item.average : '',
@@ -414,6 +431,7 @@ export const exportScores = (req, res) => {
 		ws['!cols'] = [
 			{ wch: 10 },
 			{ wch: 30 },
+			{ wch: 18 },
 			{ wch: 15 },
 			{ wch: 15 },
 			{ wch: 12 },
